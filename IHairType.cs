@@ -14,14 +14,14 @@ using System.IO;
 
 namespace Celeste.Mod.Hyperline
 {
-    public abstract class IHairType
+    public interface IHairType
     {
-        public abstract string GetHairName();
-        public abstract Color GetColor(float phase);
-        public abstract void Read(BinaryReader reader, byte[] version);
-        public abstract void Write(BinaryWriter writer);
-        public abstract IHairType CreateNew();
-        public abstract IHairType CreateNew(int i);
-        public abstract List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame);
+        string GetHairName();
+        Color GetColor(float phase);
+        void Read(BinaryReader reader, byte[] version);
+        void Write(BinaryWriter writer);
+        IHairType CreateNew();
+        IHairType CreateNew(int i);
+        List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame);
     }
 }

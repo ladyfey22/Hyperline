@@ -25,11 +25,11 @@ namespace Celeste.Mod.Hyperline
         {
             return i.ToString();
         }
-        public override string GetHairName()
+        public string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_PATTERN";
         }
-        public override Color GetColor(float phase)
+        public Color GetColor(float phase)
         {
             if (PatternCount == 0)
                 return Color.White;
@@ -37,7 +37,7 @@ namespace Celeste.Mod.Hyperline
             index = Math.Min(index, PatternCount-1);
             return ColorList[index].ToColor();
         }
-        public override void Read(BinaryReader reader, byte[] version)
+        public void Read(BinaryReader reader, byte[] version)
         {
             PatternCount = reader.ReadInt32();
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
@@ -46,14 +46,14 @@ namespace Celeste.Mod.Hyperline
                 ColorList[i].Read(reader);
             }
         }
-        public override void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer)
         {
             writer.Write(PatternCount);
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
                 ColorList[i].Write(writer);
         }
 
-        public override IHairType CreateNew()
+        public IHairType CreateNew()
         {
             return new PatternHair();
         }
@@ -65,7 +65,7 @@ namespace Celeste.Mod.Hyperline
         }
 
 
-        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Slider("Pattern Count: ", NumToString, 1, MAX_PATTERN_COUNT, PatternCount).Change(UpdatePatternCount));
@@ -81,7 +81,7 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
-        public override IHairType CreateNew(int i)
+        public IHairType CreateNew(int i)
         {
             return new PatternHair();
         }

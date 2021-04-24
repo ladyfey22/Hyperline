@@ -1,6 +1,6 @@
 ﻿- Name: Hyperline
   Version: 0.1.15
-  DLL: bin/Debug/Hyperline.dll
+  DLL: Hyperline.dll
   Dependencies:
     - Name: Everest
       Version: 1.1505.0

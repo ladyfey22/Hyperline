@@ -21,29 +21,29 @@ namespace Celeste.Mod.Hyperline
             C = color;
         }
 
-        public override string GetHairName()
+        public string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_SOLID";
         }
-        public override Color GetColor(float phase)
+        public Color GetColor(float phase)
         {
             return C.ToColor();
         }
-        public override void Read(BinaryReader reader, byte[] version)
+        public void Read(BinaryReader reader, byte[] version)
         {
             C.Read(reader);
         }
-        public override void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer)
         {
             C.Write(writer);
         }
 
-        public override IHairType CreateNew()
+        public IHairType CreateNew()
         {
             return new SolidHair();
         }
 
-        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Button("Color 1: " + C.ToString()).Pressed(() =>
@@ -54,7 +54,7 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
-        public override IHairType CreateNew(int i)
+        public IHairType CreateNew(int i)
         {
             return new SolidHair(defaultColors[i % defaultColors.Length]);
         }
