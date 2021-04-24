@@ -17,11 +17,11 @@ namespace Celeste.Mod.Hyperline
             Color2 = new HSVColor();
         }
 
-        public override string GetHairName()
+        public string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_GRADIENT";
         }
-        public override Color GetColor(float phase)
+        public Color GetColor(float phase)
         {
             phase = (float)Math.Sin(2 * Math.PI * (phase)) / 2.0f + 0.5f;
             if (doRgbGradient)
@@ -33,25 +33,25 @@ namespace Celeste.Mod.Hyperline
                Color1.V + (Color2.V - Color1.V) * phase).ToColor();
         }
 
-        public override void Read(BinaryReader reader, byte[] version)
+        public void Read(BinaryReader reader, byte[] version)
         {
             Color1.Read(reader);
             Color2.Read(reader);
             if (version[0] >= 0 && version[1] >= 1 && version[2] >= 8)
                 doRgbGradient=reader.ReadBoolean();
         }
-        public override void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer)
         {
             Color1.Write(writer);
             Color2.Write(writer);
             writer.Write(doRgbGradient);
         }
 
-        public override IHairType CreateNew()
+        public IHairType CreateNew()
         {
             return new GradientHair();
         }
-        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Button("Color 1: " + Color1.ToString()).Pressed(() =>
@@ -71,7 +71,7 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
-        public override IHairType CreateNew(int i)
+        public IHairType CreateNew(int i)
         {
             return new GradientHair();
         }
