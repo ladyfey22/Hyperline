@@ -1,0 +1,6 @@
+# ignore build files
+*.dll
+*.zip
+*.pdb
+obj/
+bin/
