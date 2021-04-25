@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
-using System.IO;
-using Monocle;
-using Microsoft.Xna.Framework.Input;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Globalization;
+using System.IO;
 
 namespace Celeste.Mod.Hyperline
 {
@@ -120,7 +114,7 @@ namespace Celeste.Mod.Hyperline
             }
             catch
             {
-                Logger.Log(LogLevel.Warn,"Hyperline", "Error reading a color value.\n");
+                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value.\n");
             }
             UpdateColor();
         }

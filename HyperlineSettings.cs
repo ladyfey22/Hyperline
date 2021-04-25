@@ -1,21 +1,8 @@
-﻿using System;
+﻿using Monocle;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet;
-using YamlDotNet.Serialization;
-using System.Globalization;
-using System.Reflection;
-using Microsoft.Xna.Framework;
-using FMOD.Studio;
-using Microsoft.Xna.Framework.Input;
-using Celeste.Mod.UI;
-using Monocle;
-using On.Celeste;
-using IL.MonoMod;
-using FMOD;
 
 namespace Celeste.Mod.Hyperline
 {
@@ -33,15 +20,15 @@ namespace Celeste.Mod.Hyperline
         public int[] HairLengthList;
         public IHairType[] HairTypeDict;
 
-        public String[] HairTextureSource;
+        public string[] HairTextureSource;
         public List<MTexture>[] HairTextures;
 
-        public String[] HairBangsSource;
+        public string[] HairBangsSource;
         public List<MTexture>[] HairBangs;
 
         readonly byte[] OldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         readonly byte[] NewHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        readonly byte[] Version   = new byte[] { 0, 1, 15 }; //MAJOR,MINOR,SUB
+        readonly byte[] Version = new byte[] { 0, 1, 15 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -49,7 +36,7 @@ namespace Celeste.Mod.Hyperline
             HairTypeList = new int[Hyperline.MAX_DASH_COUNT];
             HairLengthList = new int[Hyperline.MAX_DASH_COUNT];
             HairSpeedList = new int[Hyperline.MAX_DASH_COUNT];
-            HairTextureSource = new String[Hyperline.MAX_DASH_COUNT];
+            HairTextureSource = new string[Hyperline.MAX_DASH_COUNT];
             HairBangsSource = new string[Hyperline.MAX_DASH_COUNT];
             HairTextures = new List<MTexture>[Hyperline.MAX_DASH_COUNT];
             HairBangs = new List<MTexture>[Hyperline.MAX_DASH_COUNT];
@@ -66,8 +53,8 @@ namespace Celeste.Mod.Hyperline
                 HairLengthList[i] = 4;
                 HairTypeList[i] = 2;
                 HairSpeedList[i] = 0;
-                HairTextureSource[i] = String.Empty;
-                HairBangsSource[i] = String.Empty;
+                HairTextureSource[i] = string.Empty;
+                HairBangsSource[i] = string.Empty;
             }
 
             for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
@@ -89,7 +76,7 @@ namespace Celeste.Mod.Hyperline
                 {
                     HairTextures[i] = null;
                     Logger.Log(LogLevel.Warn, "Hyperline", "Invalid texture inputted in custom hair texture " + HairTextureSource[i]);
-                    HairTextureSource[i] = String.Empty;
+                    HairTextureSource[i] = string.Empty;
                 }
                 else
                     HairTextures[i] = GFX.Game.GetAtlasSubtextures("hyperline/" + HairTextureSource[i]);
@@ -105,20 +92,20 @@ namespace Celeste.Mod.Hyperline
             {
                 if (GFX.Game.Has(str))
                     return true;
-                str +=  "0";
+                str += "0";
             }
             return false;
         }
 
         public void LoadCustomBangs(int i)
         {
-            if (!String.IsNullOrEmpty(HairBangsSource[i]))
+            if (!string.IsNullOrEmpty(HairBangsSource[i]))
             {
                 if (!HasAtlasSubtexture("hyperline/" + HairBangsSource[i]))
                 {
                     Logger.Log(LogLevel.Warn, "Hyperline", "Invalid texture inputted in custom bang texture " + HairBangsSource[i]);
                     HairBangs[i] = null;
-                    HairBangsSource[i] = String.Empty;
+                    HairBangsSource[i] = string.Empty;
                 }
                 else
                     HairBangs[i] = GFX.Game.GetAtlasSubtextures("hyperline/" + HairBangsSource[i]);
@@ -129,7 +116,7 @@ namespace Celeste.Mod.Hyperline
 
         [SettingIgnore]
         public bool Enabled { get; set; } = true;
-        
+
         [SettingIgnore]
         public bool AllowMapHairColors { get; set; } = true;
 
@@ -180,16 +167,16 @@ namespace Celeste.Mod.Hyperline
         public override void Write(BinaryWriter writer)
         {
             writer.Write(NewHeader, 0, 4);
-            writer.Write(Version, 0, 3); 
+            writer.Write(Version, 0, 3);
             writer.Write(Enabled);
             writer.Write(AllowMapHairColors);
-            for(int i=0; i < Hyperline.MAX_DASH_COUNT; i++)
+            for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
             {
                 writer.Write((byte)HairTypeList[i]);
                 writer.Write(HairLengthList[i]);
                 writer.Write(HairSpeedList[i]);
-                for(int x=0; x < HairTypeDict.Length; x++)
-                    HairList[i,x].Write(writer);
+                for (int x = 0; x < HairTypeDict.Length; x++)
+                    HairList[i, x].Write(writer);
             }
             writer.Write(DoMaddyCrown);
             for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Celeste.Mod.UI;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.IO;
-using Celeste.Mod.UI;
 
 namespace Celeste.Mod.Hyperline
 {

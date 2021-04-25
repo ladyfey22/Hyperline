@@ -1,22 +1,14 @@
-﻿using System;
-using System.Globalization;
-using System.Reflection;
+﻿using FMOD.Studio;
 using Microsoft.Xna.Framework;
-using FMOD.Studio;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework.Input;
-using Celeste.Mod.UI;
 using Monocle;
-using On.Celeste;
-using IL.MonoMod;
-using FMOD;
+using System;
 
 namespace Celeste.Mod.Hyperline
 {
-    public class Hyperline: EverestModule
+    public class Hyperline : EverestModule
     {
 
-        public const uint MAX_DASH_COUNT=10;
+        public const uint MAX_DASH_COUNT = 10;
         public Hyperline()
         {
             UI = new HyperlineUI();
@@ -174,7 +166,7 @@ namespace Celeste.Mod.Hyperline
             Player player = self.Entity as Player;
             if (player.Dashes >= MAX_DASH_COUNT || player.Dashes < 0)
                 return colorOrig;
-            Color ReturnC= GetCurrentColor( ((Player)self.Entity).Dashes, index , self);
+            Color ReturnC = GetCurrentColor(((Player)self.Entity).Dashes, index, self);
             if (index == 0)
             {
                 Instance.UpdateMaddyCrown(self.Entity as Player);
@@ -216,7 +208,7 @@ namespace Celeste.Mod.Hyperline
             }
             orig(self);
         }
-        
+
         public override void Initialize()
         {
         }

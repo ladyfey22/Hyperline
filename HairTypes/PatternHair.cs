@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Celeste.Mod.UI;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using Celeste.Mod.UI;
 
 namespace Celeste.Mod.Hyperline
 {
     public class PatternHair : IHairType
     {
-        const int MAX_PATTERN_COUNT=10;
-        
+        const int MAX_PATTERN_COUNT = 10;
+
         public PatternHair()
         {
             ColorList = new HSVColor[MAX_PATTERN_COUNT];
@@ -20,7 +17,7 @@ namespace Celeste.Mod.Hyperline
                 ColorList[i] = new HSVColor();
             PatternCount = 0;
         }
-        
+
         static string NumToString(int i)
         {
             return i.ToString();
@@ -34,7 +31,7 @@ namespace Celeste.Mod.Hyperline
             if (PatternCount == 0)
                 return Color.White;
             int index = (int)(PatternCount * phase);
-            index = Math.Min(index, PatternCount-1);
+            index = Math.Min(index, PatternCount - 1);
             return ColorList[index].ToColor();
         }
         public void Read(BinaryReader reader, byte[] version)

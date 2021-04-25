@@ -1,15 +1,5 @@
-﻿using System;
-using System.Globalization;
-using System.Reflection;
-using Microsoft.Xna.Framework;
-using FMOD.Studio;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework.Input;
-using Celeste.Mod.UI;
-using Monocle;
-using On.Celeste;
-using IL.MonoMod;
-using FMOD;
 using System.IO;
 
 namespace Celeste.Mod.Hyperline
