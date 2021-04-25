@@ -21,18 +21,22 @@ namespace Celeste.Mod.Hyperline
         {
             return "MODOPTIONS_HYPERLINE_SOLID";
         }
+
         public Color GetColor(float phase)
         {
             return C.ToColor();
         }
+
         public void Read(BinaryReader reader, byte[] version)
         {
             C.Read(reader);
         }
+
         public void Write(BinaryWriter writer)
         {
             C.Write(writer);
         }
+
 
         public IHairType CreateNew()
         {
@@ -55,7 +59,21 @@ namespace Celeste.Mod.Hyperline
             return new SolidHair(defaultColors[i % defaultColors.Length]);
         }
 
-        static HSVColor[] defaultColors = { new HSVColor("44B7FF"), new HSVColor("AC3232"), new HSVColor("FF6DEF") };
-        HSVColor C;
+        public string GetId()
+        {
+            return id;
+        }
+
+        public uint GetHash()
+        {
+            return hash;
+        }
+
+
+        public static string id = "Hyperline_SolidHair";
+        public static uint hash = Hashing.FNV1Hash(id);
+
+        private static HSVColor[] defaultColors = { new HSVColor("44B7FF"), new HSVColor("AC3232"), new HSVColor("FF6DEF") };
+        private HSVColor C;
     }
 }

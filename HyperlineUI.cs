@@ -7,7 +7,7 @@ namespace Celeste.Mod.Hyperline
     {
 
         private HyperlineSettings Settings => Hyperline.Settings;
-        static int lastDash = 0;
+        private static int lastDash = 0;
         private TextMenu.Option<bool> enabledText;
         private TextMenu.Option<bool> allowMapHairText;
         private TextMenu.Option<bool> maddyCrownText;
@@ -25,13 +25,6 @@ namespace Celeste.Mod.Hyperline
             return v.ToString();
         }
 
-        public string StringFromType(int v)
-        {
-            if (v < 0 || v >= Settings.HairTypeDict.Length)
-                return "ERROR";
-            return Dialog.Clean(Settings.HairTypeDict[v].GetHairName());
-        }
-
         public void EnabledToggled(bool enabled)
         {
             Hyperline.Settings.Enabled = enabled;
@@ -44,34 +37,35 @@ namespace Celeste.Mod.Hyperline
             maddyCrownText.Visible = enabled;
         }
 
-        public void UpdateHairType(int dashCount, int type)
+        public void UpdateHairType(int dashCount, uint type)
         {
             lastDash = dashCount;
+            IHairType[] hairTypes = Hyperline.Instance.hairTypes.GetHairTypes();
             for (int t = 0; t < ColorMenus[dashCount].Count; t++)   //hair type
                 for (int c = 0; c < ColorMenus[dashCount][t].Count; c++)
-                    ColorMenus[dashCount][t][c].Visible = (type == t);
+                    ColorMenus[dashCount][t][c].Visible = (type == hairTypes[t].GetHash());
         }
 
-        public List<List<TextMenu.Item>> CreateDashCountMenu(TextMenu menu, bool inGame, int dashes, out TextMenu.Slider typeSlider)
+        public List<List<TextMenu.Item>> CreateDashCountMenu(TextMenu menu, bool inGame, int dashes, out TextMenuExt.EnumerableSlider<uint> typeSlider)
         {
-            typeSlider = new TextMenu.Slider("Type:", StringFromType, 0, 2, (int)Settings.HairTypeList[dashes]);
-            typeSlider.Change(v => { Settings.HairTypeList[dashes] = v; UpdateHairType(dashes, v); });
+            typeSlider = new TextMenuExt.EnumerableSlider<uint>("Type:", Hyperline.Instance.hairTypes.GetHairNames(), Settings.hairTypeList[dashes]);
+            typeSlider.Change(v => { Settings.hairTypeList[dashes] = v; UpdateHairType(dashes, v); });
             List<List<TextMenu.Item>> returnV = new List<List<TextMenu.Item>>();
-            for (int i = 0; i < Hyperline.Settings.HairTypeDict.Length; i++)
+            foreach (KeyValuePair<uint, IHairType> hair in Hyperline.Settings.hairList[dashes])
             {
-                returnV.Add(Hyperline.Settings.HairList[dashes, i].CreateMenu(menu, inGame));
+                returnV.Add(hair.Value.CreateMenu(menu, inGame));
             }
             return returnV;
         }
 
         public void SetHairLength(int dashCount, int hairLength)
         {
-            Settings.HairLengthList[dashCount] = hairLength;
+            Settings.hairLengthList[dashCount] = hairLength;
         }
 
         public void SetHairSpeed(int dashCount, int hairSpeed)
         {
-            Settings.HairSpeedList[dashCount] = hairSpeed;
+            Settings.hairSpeedList[dashCount] = hairSpeed;
         }
 
         public void CreateMenu(TextMenu menu, bool inGame)
@@ -86,29 +80,29 @@ namespace Celeste.Mod.Hyperline
             DashCountMenu = new TextMenuExt.OptionSubMenu("Dashes");
             DashCountMenu.SetInitialSelection(lastDash);
 
-            DashCountMenu.Change(v => { UpdateHairType(v, Settings.HairTypeList[v]); });
+            DashCountMenu.Change(v => { UpdateHairType(v, Settings.hairTypeList[v]); });
             for (int counterd = 0; counterd < Hyperline.MAX_DASH_COUNT; counterd++)
             {
                 int r = counterd;
                 List<TextMenu.Item> Menu = new List<TextMenu.Item>();
-                TextMenu.Slider HairTypeMenu;
+                TextMenuExt.EnumerableSlider<uint> HairTypeMenu;
                 ColorMenus.Add(CreateDashCountMenu(menu, inGame, counterd, out HairTypeMenu));
                 if (!inGame)
                 {
-                    Menu.Add(new TextMenu.Button("Custom Texture: " + Settings.HairTextureSource[counterd]).Pressed(() =>
+                    Menu.Add(new TextMenu.Button("Custom Texture: " + Settings.hairTextureSource[counterd]).Pressed(() =>
                     {
                         Audio.Play(SFX.ui_main_savefile_rename_start);
-                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.HairTextureSource[r], v => { Settings.HairTextureSource[r] = v; Settings.LoadCustomTexture(r); }, 12);
+                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.hairTextureSource[r], v => { Settings.hairTextureSource[r] = v; Settings.LoadCustomTexture(r); }, 12);
                     }));
-                    Menu.Add(new TextMenu.Button("Custom Bangs: " + Settings.HairBangsSource[counterd]).Pressed(() =>
+                    Menu.Add(new TextMenu.Button("Custom Bangs: " + Settings.hairBangsSource[counterd]).Pressed(() =>
                     {
                         Audio.Play(SFX.ui_main_savefile_rename_start);
-                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.HairBangsSource[r], v => { Settings.HairBangsSource[r] = v; Settings.LoadCustomBangs(r); }, 12);
+                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.hairBangsSource[r], v => { Settings.hairBangsSource[r] = v; Settings.LoadCustomBangs(r); }, 12);
                     }));
                 }
 
-                Menu.Add(new TextMenu.Slider("Speed:", StringFromInt, -40, 40, Settings.HairSpeedList[counterd]).Change(v => { SetHairSpeed(r, v); }));
-                Menu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MIN_HAIR_LENGTH, HyperlineSettings.MAX_HAIR_LENGTH, Settings.HairLengthList[counterd]).Change(v => { SetHairLength(r, v); }));
+                Menu.Add(new TextMenu.Slider("Speed:", StringFromInt, -40, 40, Settings.hairSpeedList[counterd]).Change(v => { SetHairSpeed(r, v); }));
+                Menu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MIN_HAIR_LENGTH, HyperlineSettings.MAX_HAIR_LENGTH, Settings.hairLengthList[counterd]).Change(v => { SetHairLength(r, v); }));
                 Menu.Add(HairTypeMenu);
                 if (!inGame)
                 {
@@ -119,7 +113,7 @@ namespace Celeste.Mod.Hyperline
                 DashCountMenu.Add(counterd.ToString(), Menu);
             }
             menu.Add(DashCountMenu);
-            UpdateHairType(lastDash, Settings.HairTypeList[lastDash]);
+            UpdateHairType(lastDash, Settings.hairTypeList[lastDash]);
             EnabledToggled(Settings.Enabled);
         }
     }

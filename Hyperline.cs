@@ -15,10 +15,16 @@ namespace Celeste.Mod.Hyperline
             LastColor = new Color();
             Instance = this;
             LastHairLength = 4;
+            hairTypes = new HairTypeManager();
+            AddType(new GradientHair());
+            AddType(new PatternHair());
+            AddType(new SolidHair());
+            AddType(new RainbowHair());
         }
 
         public static Hyperline Instance;
 
+        public HairTypeManager hairTypes;
         public override Type SettingsType => typeof(HyperlineSettings);
         public static HyperlineSettings Settings => (HyperlineSettings)Instance._Settings;
 
@@ -37,6 +43,11 @@ namespace Celeste.Mod.Hyperline
             UI.CreateMenu(menu, inGame);
         }
 
+        public void AddType(IHairType type)
+        {
+            hairTypes.AddHairType(type);
+        }
+
         public override void Load()
         {
             HookStuff();
@@ -47,7 +58,7 @@ namespace Celeste.Mod.Hyperline
             UnhookStuff();
         }
 
-        void UpdateMaddyCrown(Player player)
+        private void UpdateMaddyCrown(Player player)
         {
             if (Settings.DoMaddyCrown && MaddyCrownSprite == null)
                 foreach (Sprite sprite in player.Components.GetAll<Sprite>())
@@ -107,13 +118,13 @@ namespace Celeste.Mod.Hyperline
 
             if (index == 0)  //bangs
             {
-                if (Settings.HairBangs[player.Dashes] == null || Settings.HairBangs[player.Dashes].Count == 0)
+                if (Settings.hairBangs[player.Dashes] == null || Settings.hairBangs[player.Dashes].Count == 0)
                     return orig(self, index);
-                return Settings.HairBangs[player.Dashes][self.GetSprite().HairFrame % Settings.HairBangs[player.Dashes].Count];
+                return Settings.hairBangs[player.Dashes][self.GetSprite().HairFrame % Settings.hairBangs[player.Dashes].Count];
             }
-            if (Settings.HairTextures[player.Dashes] == null || Settings.HairTextures[player.Dashes].Count == 0)
+            if (Settings.hairTextures[player.Dashes] == null || Settings.hairTextures[player.Dashes].Count == 0)
                 return orig(self, index);
-            return Settings.HairTextures[player.Dashes][index % Settings.HairTextures[player.Dashes].Count];
+            return Settings.hairTextures[player.Dashes][index % Settings.hairTextures[player.Dashes].Count];
         }
 
         public static void PlayerAdded(On.Celeste.Player.orig_Added orig, Player self, Scene scene)
@@ -171,27 +182,32 @@ namespace Celeste.Mod.Hyperline
             {
                 Instance.UpdateMaddyCrown(self.Entity as Player);
                 Instance.LastColor = ReturnC;
-                Hyperline.Instance.LastHairLength = Settings.HairLengthList[((Player)self.Entity).Dashes];
+                Hyperline.Instance.LastHairLength = Settings.hairLengthList[((Player)self.Entity).Dashes];
             }
             return ReturnC;
         }
 
         public static Color GetCurrentColor(int dashes, int index, PlayerHair self)
         {
-            if (dashes >= Settings.HairTypeList.Length)
+            if (dashes >= Settings.hairTypeList.Length)
                 return new Color(0, 0, 0);
-            int type = (int)Settings.HairTypeList[dashes];
-            int speed = Settings.HairSpeedList[dashes];
-            int length = Settings.HairLengthList[dashes];
+            uint type = Settings.hairTypeList[dashes];
+            int speed = Settings.hairSpeedList[dashes];
+            int length = Settings.hairLengthList[dashes];
             float phaseShift = Math.Abs(((float)index / ((float)length)) - 0.01f);
             float phase = phaseShift + speed / 20.0f * Hyperline.Instance.Time;
             phase -= (float)(Math.Floor(phase));
             Color returnV = new Color(0, 0, 0);
-            if (Settings.HairList[dashes, type] != null)
+            if (Settings.hairList[dashes].ContainsKey(type) && Settings.hairList[dashes][type] != null)
             {
-                returnV = Settings.HairList[dashes, type].GetColor(phase);
+                returnV = Settings.hairList[dashes][type].GetColor(phase);
                 if (returnV == null)
                     returnV = new Color(0, 0, 0);
+            }
+            else
+            {
+                Logger.Log("Hyperline", "Hair list didn't contain type " + type);
+                throw new Exception("Hair list didn't contain type " + type);
             }
             return returnV;
         }

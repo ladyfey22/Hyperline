@@ -8,46 +8,48 @@ namespace Celeste.Mod.Hyperline
 {
     public class PatternHair : IHairType
     {
-        const int MAX_PATTERN_COUNT = 10;
+        public const int MAX_PATTERN_COUNT = 10;
 
         public PatternHair()
         {
-            ColorList = new HSVColor[MAX_PATTERN_COUNT];
-            for (int i = 0; i < ColorList.Length; i++)
-                ColorList[i] = new HSVColor();
-            PatternCount = 0;
+            colorList = new HSVColor[MAX_PATTERN_COUNT];
+            for (int i = 0; i < colorList.Length; i++)
+                colorList[i] = new HSVColor();
+            patternCount = 0;
         }
 
-        static string NumToString(int i)
+        public static string NumToString(int i)
         {
             return i.ToString();
         }
+
         public string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_PATTERN";
         }
+
         public Color GetColor(float phase)
         {
-            if (PatternCount == 0)
+            if (patternCount == 0)
                 return Color.White;
-            int index = (int)(PatternCount * phase);
-            index = Math.Min(index, PatternCount - 1);
-            return ColorList[index].ToColor();
+            int index = (int)(patternCount * phase);
+            index = Math.Min(index, patternCount - 1);
+            return colorList[index].ToColor();
         }
         public void Read(BinaryReader reader, byte[] version)
         {
-            PatternCount = reader.ReadInt32();
+            patternCount = reader.ReadInt32();
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
             {
-                ColorList[i] = new HSVColor();
-                ColorList[i].Read(reader);
+                colorList[i] = new HSVColor();
+                colorList[i].Read(reader);
             }
         }
         public void Write(BinaryWriter writer)
         {
-            writer.Write(PatternCount);
+            writer.Write(patternCount);
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
-                ColorList[i].Write(writer);
+                colorList[i].Write(writer);
         }
 
         public IHairType CreateNew()
@@ -57,22 +59,21 @@ namespace Celeste.Mod.Hyperline
 
         public void UpdatePatternCount(int v)
         {
-
-            PatternCount = v;
+            patternCount = v;
         }
 
 
         public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
-            colorMenus.Add(new TextMenu.Slider("Pattern Count: ", NumToString, 1, MAX_PATTERN_COUNT, PatternCount).Change(UpdatePatternCount));
+            colorMenus.Add(new TextMenu.Slider("Pattern Count: ", NumToString, 1, MAX_PATTERN_COUNT, patternCount).Change(UpdatePatternCount));
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
             {
                 int counter = i;
-                colorMenus.Add(new TextMenu.Button("Color " + (counter + 1) + ": " + ColorList[counter].ToString()).Pressed(() =>
+                colorMenus.Add(new TextMenu.Button("Color " + (counter + 1) + ": " + colorList[counter].ToString()).Pressed(() =>
                   {
                       Audio.Play(SFX.ui_main_savefile_rename_start);
-                      menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(ColorList[counter].ToString(), v => { ColorList[counter] = new HSVColor(v); }, 9);
+                      menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(colorList[counter].ToString(), v => { colorList[counter] = new HSVColor(v); }, 9);
                   }));
             }
             return colorMenus;
@@ -83,7 +84,20 @@ namespace Celeste.Mod.Hyperline
             return new PatternHair();
         }
 
-        HSVColor[] ColorList;
-        int PatternCount;
+        public string GetId()
+        {
+            return id;
+        }
+
+        public uint GetHash()
+        {
+            return hash;
+        }
+
+        public static string id = "Hyperline_PatternHair";
+        public static uint hash = Hashing.FNV1Hash(id);
+
+        private HSVColor[] colorList;
+        private int patternCount;
     }
 }

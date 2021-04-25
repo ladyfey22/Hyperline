@@ -91,7 +91,7 @@ namespace Celeste.Mod.Hyperline
             return InternalColor;
         }
 
-        void FromString(string ColorString)
+        private void FromString(string ColorString)
         {
 
             try

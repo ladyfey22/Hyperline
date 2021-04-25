@@ -48,6 +48,7 @@ namespace Celeste.Mod.Hyperline
         {
             return new GradientHair();
         }
+
         public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
@@ -72,6 +73,20 @@ namespace Celeste.Mod.Hyperline
         {
             return new GradientHair();
         }
+
+        public string GetId()
+        {
+            return id;
+        }
+
+        public uint GetHash()
+        {
+            return hash;
+        }
+
+
+        public static string id = "Hyperline_GradientHair";
+        public static uint hash = Hashing.FNV1Hash(id);
 
         private HSVColor color1;
         private HSVColor color2;
