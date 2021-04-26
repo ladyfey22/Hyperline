@@ -56,9 +56,12 @@ namespace Celeste.Mod.Hyperline
 
         public void SetTrigger(IHairType hair, int dashCount, int length, int speed)
         {
-            hairChanges[dashCount] = hair;
-            hairLengthChanges[dashCount] = length;
-            hairSpeedChanges[dashCount] = speed;
+            if (dashCount < Hyperline.MAX_DASH_COUNT)
+            {
+                hairChanges[dashCount] = hair;
+                hairLengthChanges[dashCount] = length;
+                hairSpeedChanges[dashCount] = speed;
+            }
             UpdateFromChanges();
         }
 
@@ -76,16 +79,22 @@ namespace Celeste.Mod.Hyperline
 
         public IHairType GetHair(int dashCount)
         {
+            if (dashCount >= Hyperline.MAX_DASH_COUNT)
+                return hairList[Hyperline.MAX_DASH_COUNT - 1];
             return hairList[dashCount];
         }
 
         public int GetHairLength(int dashCount)
         {
+            if (dashCount >= Hyperline.MAX_DASH_COUNT)
+                return hairLengthList[Hyperline.MAX_DASH_COUNT - 1];
             return hairLengthList[dashCount];
         }
 
         public int GetHairSpeed(int dashCount)
         {
+            if (dashCount >= Hyperline.MAX_DASH_COUNT)
+                return hairSpeedList[Hyperline.MAX_DASH_COUNT - 1];
             return hairSpeedList[dashCount];
         }
 

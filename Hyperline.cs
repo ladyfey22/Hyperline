@@ -16,7 +16,6 @@ namespace Celeste.Mod.Hyperline
             triggerManager = new TriggerManager();
             Instance = this;
             lastHairLength = 4;
-
             //add the default hair types
             hairTypes = new HairTypeManager();
             AddHairType(new GradientHair());
@@ -56,6 +55,7 @@ namespace Celeste.Mod.Hyperline
 
         public override void Load()
         {
+            Logger.Log(LogLevel.Info, "Hyperline", "Starting hyperline Version " + Hyperline.Settings.version[0] + "-" + Hyperline.Settings.version[1] + "-" + Hyperline.Settings.version[2]);
             HookStuff();
         }
 
@@ -206,9 +206,10 @@ namespace Celeste.Mod.Hyperline
 
         public static Color GetCurrentColor(int dashes, int index, PlayerHair self)
         {
-            if (dashes >= HyperlineSettings.MAX_HAIR_LENGTH)
+            if (dashes >= MAX_DASH_COUNT)
+            {
                 return new Color(0, 0, 0);
-
+            }
             int speed = Instance.triggerManager.GetHairSpeed(dashes);
             int length = Instance.triggerManager.GetHairLength(dashes);
             float phaseShift = Math.Abs(((float)index / ((float)length)) - 0.01f);

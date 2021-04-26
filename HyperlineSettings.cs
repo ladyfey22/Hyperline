@@ -25,7 +25,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 1, 16 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 1, 17 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
