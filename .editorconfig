@@ -106,3 +106,6 @@ dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 #prefer properties not to be prefaced with this. or Me. in Visual Basic
 dotnet_style_qualification_for_property = false:suggestion
+
+# IDE0044: Add readonly modifier
+dotnet_style_readonly_field = false:suggestion

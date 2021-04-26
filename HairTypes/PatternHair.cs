@@ -52,11 +52,6 @@ namespace Celeste.Mod.Hyperline
                 colorList[i].Write(writer);
         }
 
-        public IHairType CreateNew()
-        {
-            return new PatternHair();
-        }
-
         public void UpdatePatternCount(int v)
         {
             patternCount = v;
@@ -79,9 +74,27 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
+        public IHairType CreateNew()
+        {
+            return new PatternHair();
+        }
+
         public IHairType CreateNew(int i)
         {
             return new PatternHair();
+        }
+
+        public IHairType CreateNew(string str)
+        {
+            PatternHair returnV = new PatternHair();
+            string[] tokens = str.Split(',');
+
+            if (tokens.Length < 1) //no length paramter
+                return returnV;
+            returnV.patternCount = int.Parse(tokens[0]);
+            for (int i = 0; i < returnV.patternCount && i < returnV.colorList.Length && i + 1 < tokens.Length; i++)
+                returnV.colorList[i] = new HSVColor(tokens[i + 1]);
+            return returnV;
         }
 
         public string GetId()

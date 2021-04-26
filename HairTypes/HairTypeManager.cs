@@ -59,6 +59,11 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
+        public IHairType GetType(string str)
+        {
+            return GetType(Hashing.FNV1Hash(str));
+        }
+
         public IHairType GetType(uint id)
         {
             if (hairTypes.ContainsKey(id))

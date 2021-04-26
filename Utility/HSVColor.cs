@@ -5,6 +5,9 @@ using System.IO;
 
 namespace Celeste.Mod.Hyperline
 {
+    /// <summary>
+    /// A class representing color as Hue, Saturation, and Value.
+    /// </summary>
     public class HSVColor
     {
         public HSVColor(float h = 0.0f, float s = .0f, float v = 0.0f)
@@ -96,14 +99,14 @@ namespace Celeste.Mod.Hyperline
 
             try
             {
-                if (ColorString.Length == 6)    //Assumed to be an RGB value
+                if (ColorString.Length == 6)    //Assumed to be an RGB value.
                     FromColor(new Color(
                                 int.Parse(ColorString.Substring(0, 2), NumberStyles.HexNumber),
                                 int.Parse(ColorString.Substring(2, 2), NumberStyles.HexNumber),
                                 int.Parse(ColorString.Substring(4, 2), NumberStyles.HexNumber),
                                 255));
                 else
-                if (ColorString.Length == 9)
+                if (ColorString.Length == 9) //Assumed to be an HSV value.
                 {
                     H = int.Parse(ColorString.Substring(0, 3), NumberStyles.Integer);
                     S = int.Parse(ColorString.Substring(3, 3), NumberStyles.Integer) / 100.0f;

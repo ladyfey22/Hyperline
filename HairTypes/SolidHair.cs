@@ -37,12 +37,6 @@ namespace Celeste.Mod.Hyperline
             C.Write(writer);
         }
 
-
-        public IHairType CreateNew()
-        {
-            return new SolidHair();
-        }
-
         public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
@@ -53,10 +47,23 @@ namespace Celeste.Mod.Hyperline
             }));
             return colorMenus;
         }
+        public IHairType CreateNew()
+        {
+            return new SolidHair();
+        }
 
         public IHairType CreateNew(int i)
         {
             return new SolidHair(defaultColors[i % defaultColors.Length]);
+        }
+
+        public IHairType CreateNew(string str)
+        {
+            SolidHair returnV = new SolidHair();
+            string[] tokens = str.Split(',');
+            if (tokens.Length >= 1)
+                returnV.C = new HSVColor(tokens[0]);
+            return returnV;
         }
 
         public string GetId()

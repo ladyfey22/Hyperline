@@ -12,14 +12,17 @@ namespace Celeste.Mod.Hyperline
         public Hyperline()
         {
             UI = new HyperlineUI();
-            LastColor = new Color();
+            lastColor = new Color();
+            triggerManager = new TriggerManager();
             Instance = this;
-            LastHairLength = 4;
+            lastHairLength = 4;
+
+            //add the default hair types
             hairTypes = new HairTypeManager();
-            AddType(new GradientHair());
-            AddType(new PatternHair());
-            AddType(new SolidHair());
-            AddType(new RainbowHair());
+            AddHairType(new GradientHair());
+            AddHairType(new PatternHair());
+            AddHairType(new SolidHair());
+            AddHairType(new RainbowHair());
         }
 
         public static Hyperline Instance;
@@ -28,14 +31,17 @@ namespace Celeste.Mod.Hyperline
         public override Type SettingsType => typeof(HyperlineSettings);
         public static HyperlineSettings Settings => (HyperlineSettings)Instance._Settings;
 
+        public TriggerManager triggerManager;
+
+
         public HyperlineUI UI;
         public override Type SaveDataType => null;
 
-        Color LastColor;
-        int LastHairLength;
-        float Time;
-        bool isHooked = false;
-        Sprite MaddyCrownSprite;
+        private Color lastColor;
+        private int lastHairLength;
+        private float time;
+        private bool isHooked = false;
+        private Sprite maddyCrownSprite;
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
         {
@@ -43,7 +49,7 @@ namespace Celeste.Mod.Hyperline
             UI.CreateMenu(menu, inGame);
         }
 
-        public void AddType(IHairType type)
+        public void AddHairType(IHairType type)
         {
             hairTypes.AddHairType(type);
         }
@@ -60,18 +66,30 @@ namespace Celeste.Mod.Hyperline
 
         private void UpdateMaddyCrown(Player player)
         {
-            if (Settings.DoMaddyCrown && MaddyCrownSprite == null)
+            if (Settings.DoMaddyCrown && maddyCrownSprite == null)
                 foreach (Sprite sprite in player.Components.GetAll<Sprite>())
                 {
                     if (sprite.Animations.ContainsKey("crown"))
-                        MaddyCrownSprite = sprite;
+                        maddyCrownSprite = sprite;
                 }
-            if (Settings.DoMaddyCrown && MaddyCrownSprite != null)
-                MaddyCrownSprite.SetColor(LastColor);
+            if (Settings.DoMaddyCrown && maddyCrownSprite != null)
+                maddyCrownSprite.SetColor(lastColor);
         }
 
         public static void OnLevelEntry(Session session, bool fromSaveData)
         {
+        }
+
+        public override void LoadContent(bool firstLoad)
+        {
+            Settings.LoadTextures();
+        }
+
+        private static void OnUnpause(On.Celeste.Level.orig_EndPauseEffects orig, Level self)
+        {
+            Instance.triggerManager.LoadFromSettings();
+            Instance.triggerManager.UpdateFromChanges();
+            orig(self);
         }
 
         public void UnhookStuff()
@@ -85,12 +103,9 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.DeathEffect.Draw -= Death;
             On.Celeste.Player.Added -= PlayerAdded;
             On.Celeste.Player.Update -= PlayerUpdate;
-            Everest.Events.Level.OnEnter -= OnLevelEntry;
+            On.Celeste.Level.EndPauseEffects -= OnUnpause;
+            TriggerManager.Unload();
             isHooked = false;
-        }
-        public override void LoadContent(bool firstLoad)
-        {
-            Settings.LoadTextures();
         }
 
         public void HookStuff()
@@ -104,7 +119,8 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.DeathEffect.Draw += Death;
             On.Celeste.Player.Added += PlayerAdded;
             On.Celeste.Player.Update += PlayerUpdate;
-            Everest.Events.Level.OnEnter += OnLevelEntry;
+            On.Celeste.Level.EndPauseEffects += OnUnpause;
+            TriggerManager.Load();
             isHooked = true;
         }
 
@@ -130,14 +146,15 @@ namespace Celeste.Mod.Hyperline
         public static void PlayerAdded(On.Celeste.Player.orig_Added orig, Player self, Scene scene)
         {
             orig(self, scene);
-            Instance.MaddyCrownSprite = null;
+            Instance.maddyCrownSprite = null;
         }
+
         public static void PlayerUpdate(On.Celeste.Player.orig_Update orig, Player player)
         {
             if (Settings.Enabled)
             {
                 player.OverrideHairColor = GetCurrentColor(player.Dashes, 0, player.Hair);
-                Instance.MaddyCrownSprite = null;
+                Instance.maddyCrownSprite = null;
             }
             else
                 player.OverrideHairColor = null;
@@ -147,8 +164,8 @@ namespace Celeste.Mod.Hyperline
         public static void Death(On.Celeste.DeathEffect.orig_Draw orig, Vector2 position, Color color, float ease)
         {
             if (Settings.Enabled)
-                color = Instance.LastColor;
-            Instance.MaddyCrownSprite = null;
+                color = Instance.lastColor;
+            Instance.maddyCrownSprite = null;
             orig(position, color, ease);
         }
 
@@ -162,7 +179,7 @@ namespace Celeste.Mod.Hyperline
                 else if (player.StateMachine.State != 19)
                 {
                     player.Sprite.HairCount = ((player.Dashes > 1) ? 5 : 4);
-                    player.Sprite.HairCount += LastHairLength - 4;
+                    player.Sprite.HairCount += lastHairLength - 4;
                 }
                 else if (player.StateMachine.State == 19)
                     player.Sprite.HairCount = 7;
@@ -181,33 +198,30 @@ namespace Celeste.Mod.Hyperline
             if (index == 0)
             {
                 Instance.UpdateMaddyCrown(self.Entity as Player);
-                Instance.LastColor = ReturnC;
-                Hyperline.Instance.LastHairLength = Settings.hairLengthList[((Player)self.Entity).Dashes];
+                Instance.lastColor = ReturnC;
+                Instance.lastHairLength = Instance.triggerManager.GetHairLength(((Player)self.Entity).Dashes);
             }
             return ReturnC;
         }
 
         public static Color GetCurrentColor(int dashes, int index, PlayerHair self)
         {
-            if (dashes >= Settings.hairTypeList.Length)
+            if (dashes >= HyperlineSettings.MAX_HAIR_LENGTH)
                 return new Color(0, 0, 0);
-            uint type = Settings.hairTypeList[dashes];
-            int speed = Settings.hairSpeedList[dashes];
-            int length = Settings.hairLengthList[dashes];
+
+            int speed = Instance.triggerManager.GetHairSpeed(dashes);
+            int length = Instance.triggerManager.GetHairLength(dashes);
             float phaseShift = Math.Abs(((float)index / ((float)length)) - 0.01f);
-            float phase = phaseShift + speed / 20.0f * Hyperline.Instance.Time;
+            float phase = phaseShift + speed / 20.0f * Hyperline.Instance.time;
             phase -= (float)(Math.Floor(phase));
             Color returnV = new Color(0, 0, 0);
-            if (Settings.hairList[dashes].ContainsKey(type) && Settings.hairList[dashes][type] != null)
+
+            IHairType hair = Instance.triggerManager.GetHair(dashes);
+            if (hair != null)
             {
-                returnV = Settings.hairList[dashes][type].GetColor(phase);
+                returnV = hair.GetColor(phase);
                 if (returnV == null)
                     returnV = new Color(0, 0, 0);
-            }
-            else
-            {
-                Logger.Log("Hyperline", "Hair list didn't contain type " + type);
-                throw new Exception("Hair list didn't contain type " + type);
             }
             return returnV;
         }
@@ -218,8 +232,8 @@ namespace Celeste.Mod.Hyperline
             {
                 Player player = (Player)self.Entity;
                 player.Hair.Color = GetCurrentColor(player.Dashes, 0, player.Hair);
-                Hyperline.Instance.Time += Engine.DeltaTime;
-                MaddyCrownSprite = null;
+                Instance.time += Engine.DeltaTime;
+                maddyCrownSprite = null;
                 Instance.UpdateHairLength(self);
             }
             orig(self);

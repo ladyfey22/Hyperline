@@ -12,12 +12,12 @@ namespace Celeste.Mod.Hyperline
         private TextMenu.Option<bool> allowMapHairText;
         private TextMenu.Option<bool> maddyCrownText;
 
-        List<List<List<TextMenu.Item>>> ColorMenus; //format is  [Dashes][Type][ColorNum]
-        TextMenuExt.OptionSubMenu DashCountMenu;
+        private List<List<List<TextMenu.Item>>> colorMenus; //format is  [Dashes][Type][ColorNum]
+        private TextMenuExt.OptionSubMenu dashCountMenu;
 
         public HyperlineUI()
         {
-            ColorMenus = new List<List<List<TextMenu.Item>>>();
+            colorMenus = new List<List<List<TextMenu.Item>>>();
         }
 
         public string StringFromInt(int v)
@@ -33,7 +33,7 @@ namespace Celeste.Mod.Hyperline
             else
                 Hyperline.Instance.HookStuff();
             allowMapHairText.Visible = enabled;
-            DashCountMenu.Visible = enabled;
+            dashCountMenu.Visible = enabled;
             maddyCrownText.Visible = enabled;
         }
 
@@ -41,9 +41,9 @@ namespace Celeste.Mod.Hyperline
         {
             lastDash = dashCount;
             IHairType[] hairTypes = Hyperline.Instance.hairTypes.GetHairTypes();
-            for (int t = 0; t < ColorMenus[dashCount].Count; t++)   //hair type
-                for (int c = 0; c < ColorMenus[dashCount][t].Count; c++)
-                    ColorMenus[dashCount][t][c].Visible = (type == hairTypes[t].GetHash());
+            for (int t = 0; t < colorMenus[dashCount].Count; t++)   //hair type
+                for (int c = 0; c < colorMenus[dashCount][t].Count; c++)
+                    colorMenus[dashCount][t][c].Visible = (type == hairTypes[t].GetHash());
         }
 
         public List<List<TextMenu.Item>> CreateDashCountMenu(TextMenu menu, bool inGame, int dashes, out TextMenuExt.EnumerableSlider<uint> typeSlider)
@@ -76,17 +76,17 @@ namespace Celeste.Mod.Hyperline
             menu.Add(enabledText);
             menu.Add(allowMapHairText);
             menu.Add(maddyCrownText);
-            ColorMenus = new List<List<List<TextMenu.Item>>>();    //dashes
-            DashCountMenu = new TextMenuExt.OptionSubMenu("Dashes");
-            DashCountMenu.SetInitialSelection(lastDash);
+            colorMenus = new List<List<List<TextMenu.Item>>>();    //dashes
+            dashCountMenu = new TextMenuExt.OptionSubMenu("Dashes");
+            dashCountMenu.SetInitialSelection(lastDash);
 
-            DashCountMenu.Change(v => { UpdateHairType(v, Settings.hairTypeList[v]); });
+            dashCountMenu.Change(v => { UpdateHairType(v, Settings.hairTypeList[v]); });
             for (int counterd = 0; counterd < Hyperline.MAX_DASH_COUNT; counterd++)
             {
                 int r = counterd;
                 List<TextMenu.Item> Menu = new List<TextMenu.Item>();
                 TextMenuExt.EnumerableSlider<uint> HairTypeMenu;
-                ColorMenus.Add(CreateDashCountMenu(menu, inGame, counterd, out HairTypeMenu));
+                colorMenus.Add(CreateDashCountMenu(menu, inGame, counterd, out HairTypeMenu));
                 if (!inGame)
                 {
                     Menu.Add(new TextMenu.Button("Custom Texture: " + Settings.hairTextureSource[counterd]).Pressed(() =>
@@ -106,13 +106,13 @@ namespace Celeste.Mod.Hyperline
                 Menu.Add(HairTypeMenu);
                 if (!inGame)
                 {
-                    for (int i = 0; i < ColorMenus[counterd].Count; i++)
-                        for (int j = 0; j < ColorMenus[counterd][i].Count; j++)
-                            Menu.Add(ColorMenus[counterd][i][j]);
+                    for (int i = 0; i < colorMenus[counterd].Count; i++)
+                        for (int j = 0; j < colorMenus[counterd][i].Count; j++)
+                            Menu.Add(colorMenus[counterd][i][j]);
                 }
-                DashCountMenu.Add(counterd.ToString(), Menu);
+                dashCountMenu.Add(counterd.ToString(), Menu);
             }
-            menu.Add(DashCountMenu);
+            menu.Add(dashCountMenu);
             UpdateHairType(lastDash, Settings.hairTypeList[lastDash]);
             EnabledToggled(Settings.Enabled);
         }

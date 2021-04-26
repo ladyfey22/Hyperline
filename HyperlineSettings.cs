@@ -200,10 +200,12 @@ namespace Celeste.Mod.Hyperline
                     {
                         uint id = reader.ReadUInt32();
                         uint byteCount = reader.ReadUInt32();
+
+                        BinaryReader tmpReader = new BinaryReader(new MemoryStream(reader.ReadBytes((int)byteCount)));
+
                         if (hairList[i].ContainsKey(id))
-                            hairList[i][id].Read(reader, version);
-                        else
-                            reader.ReadBytes((int)byteCount); //we don't know what type this is... throw it out
+                            hairList[i][id].Read(tmpReader, version);
+                        //if we don't know what type this is... throw it out
                     }
                 }
             }

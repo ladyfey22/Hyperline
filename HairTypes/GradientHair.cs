@@ -12,6 +12,7 @@ namespace Celeste.Mod.Hyperline
         {
             color1 = new HSVColor();
             color2 = new HSVColor();
+            doRgbGradient = false;
         }
 
         public string GetHairName()
@@ -44,11 +45,6 @@ namespace Celeste.Mod.Hyperline
             writer.Write(doRgbGradient);
         }
 
-        public IHairType CreateNew()
-        {
-            return new GradientHair();
-        }
-
         public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
@@ -69,9 +65,27 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
+        public IHairType CreateNew()
+        {
+            return new GradientHair();
+        }
+
         public IHairType CreateNew(int i)
         {
             return new GradientHair();
+        }
+
+        public IHairType CreateNew(string str)
+        {
+            GradientHair returnV = new GradientHair();
+            string[] tokenList = str.Split(',');
+            if (tokenList.Length < 2)
+                return returnV;
+            returnV.color1 = new HSVColor(tokenList[0]);
+            returnV.color2 = new HSVColor(tokenList[1]);
+            if (tokenList.Length >= 3)
+                returnV.doRgbGradient = bool.Parse(tokenList[2]);
+            return returnV;
         }
 
         public string GetId()
