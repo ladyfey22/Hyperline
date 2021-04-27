@@ -1,4 +1,5 @@
 ﻿using Monocle;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace Celeste.Mod.Hyperline
     {
         public const int MIN_HAIR_LENGTH = 1;
         public const int MAX_HAIR_LENGTH = 100;
+        public const int MIN_HAIR_SPEED = -40;
+        public const int MAX_HAIR_SPEED = 40;
 
         public Dictionary<uint, IHairType>[] hairList;
 
@@ -28,6 +31,11 @@ namespace Celeste.Mod.Hyperline
         public readonly byte[] version = new byte[] { 0, 1, 17 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
+        {
+            ResetSettings();
+        }
+
+        public void ResetSettings()
         {
             hairTypeList = new uint[Hyperline.MAX_DASH_COUNT];
             hairLengthList = new int[Hyperline.MAX_DASH_COUNT];
@@ -171,46 +179,71 @@ namespace Celeste.Mod.Hyperline
 
         public override void Read(BinaryReader reader)
         {
-            byte[] header = reader.ReadBytes(4);
-            if (header.SequenceEqual(oldHeader) || header.SequenceEqual(newHeader))
+            try
             {
-                byte[] version = new byte[] { 0, 1, 7 };
-                if (header.SequenceEqual(newHeader))
-                    version = reader.ReadBytes(3);
-                if (version[0] == 0 && version[1] <= 1 && version[2] <= 15)
+                byte[] header = reader.ReadBytes(4);
+                if (header.SequenceEqual(oldHeader) || header.SequenceEqual(newHeader))
                 {
-                    ReadV1_15(reader);
-                    return;
-                }
-                Enabled = reader.ReadBoolean();
-                AllowMapHairColors = reader.ReadBoolean();
-                DoMaddyCrown = reader.ReadBoolean();
-                for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
-                {
-                    hairTypeList[i] = reader.ReadUInt32();
-                    hairTypeList[i] = Hyperline.Instance.hairTypes.Has(hairTypeList[i]) ? hairTypeList[i] : SolidHair.hash;
-                    hairLengthList[i] = reader.ReadInt32();
-                    hairLengthList[i] = (hairLengthList[i] >= MIN_HAIR_LENGTH && hairLengthList[i] <= MAX_HAIR_LENGTH) ? hairLengthList[i] : 4;
-                    hairSpeedList[i] = reader.ReadInt32();
-                    hairBangsSource[i] = reader.ReadString();
-                    hairTextureSource[i] = reader.ReadString();
-
-                    uint hairTypeCount = reader.ReadUInt32();
-                    for (uint j = 0u; j < hairTypeCount; j++)
+                    byte[] version = new byte[] { 0, 1, 7 };
+                    if (header.SequenceEqual(newHeader))
+                        version = reader.ReadBytes(3);
+                    Logger.Log(LogLevel.Debug, "Hyperline", "Hyperline loading settings file v" + version[0] + "." + version[1] + "." + version[2]);
+                    if (version[0] == 0 && version[1] <= 1 && version[2] <= 15)
                     {
-                        uint id = reader.ReadUInt32();
-                        uint byteCount = reader.ReadUInt32();
+                        ReadV1_15(reader);
+                        return;
+                    }
+                    Enabled = reader.ReadBoolean();
+                    AllowMapHairColors = reader.ReadBoolean();
+                    DoMaddyCrown = reader.ReadBoolean();
+                    for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
+                    {
+                        hairTypeList[i] = reader.ReadUInt32();
+                        if (!Hyperline.Instance.hairTypes.Has(hairTypeList[i]))
+                        {
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair type " + hairTypeList[i]);
+                            hairTypeList[i] = SolidHair.hash;
+                        }
 
-                        BinaryReader tmpReader = new BinaryReader(new MemoryStream(reader.ReadBytes((int)byteCount)));
+                        hairLengthList[i] = reader.ReadInt32();
+                        if (hairLengthList[i] < MIN_HAIR_LENGTH || hairLengthList[i] > MAX_HAIR_LENGTH)
+                        {
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair length " + hairLengthList[i]);
+                            hairLengthList[i] = 4;
+                        }
 
-                        if (hairList[i].ContainsKey(id))
-                            hairList[i][id].Read(tmpReader, version);
-                        //if we don't know what type this is... throw it out
+                        hairSpeedList[i] = reader.ReadInt32();
+                        if (hairSpeedList[i] < MIN_HAIR_SPEED || hairSpeedList[i] > MAX_HAIR_SPEED)
+                        {
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair speed " + hairSpeedList[i]);
+                            hairSpeedList[i] = 0;
+                        }
+
+                        hairBangsSource[i] = reader.ReadString();
+                        hairTextureSource[i] = reader.ReadString();
+
+                        uint hairTypeCount = reader.ReadUInt32();
+                        for (uint j = 0u; j < hairTypeCount; j++)
+                        {
+                            uint id = reader.ReadUInt32();
+                            uint byteCount = reader.ReadUInt32();
+
+                            BinaryReader tmpReader = new BinaryReader(new MemoryStream(reader.ReadBytes((int)byteCount)));
+
+                            if (hairList[i].ContainsKey(id))
+                                hairList[i][id].Read(tmpReader, version);
+                            //if we don't know what type this is... throw it out
+                        }
                     }
                 }
+                else
+                    Logger.Log(LogLevel.Error, "Hyperline", "Settings file was found corrupted/invalid.");
             }
-            else
-                Logger.Log(LogLevel.Error, "Hyperline", "Settings file was found corrupted.");
+            catch (Exception exception)
+            {
+                Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception.ToString());
+                ResetSettings();
+            }
         }
 
         public override void Write(BinaryWriter writer)

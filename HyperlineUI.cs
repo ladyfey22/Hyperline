@@ -101,7 +101,7 @@ namespace Celeste.Mod.Hyperline
                     }));
                 }
 
-                Menu.Add(new TextMenu.Slider("Speed:", StringFromInt, -40, 40, Settings.hairSpeedList[counterd]).Change(v => { SetHairSpeed(r, v); }));
+                Menu.Add(new TextMenu.Slider("Speed:", StringFromInt, HyperlineSettings.MIN_HAIR_SPEED, HyperlineSettings.MAX_HAIR_SPEED, Settings.hairSpeedList[counterd]).Change(v => { SetHairSpeed(r, v); }));
                 Menu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MIN_HAIR_LENGTH, HyperlineSettings.MAX_HAIR_LENGTH, Settings.hairLengthList[counterd]).Change(v => { SetHairLength(r, v); }));
                 Menu.Add(HairTypeMenu);
                 if (!inGame)
