@@ -248,7 +248,6 @@ namespace Celeste.Mod.Hyperline
                 else
                 {
                     MemoryStream currentReader = new MemoryStream(reader.ReadBytes((int)reader.BaseStream.Length));
-                    //    Logger.Log(LogLevel.Error, "Hyperline", "Settings file was found corrupted/invalid.");
                     XDocument document = XDocument.Load(currentReader);
                     XElement root = document.Element("root");
 
@@ -302,7 +301,6 @@ namespace Celeste.Mod.Hyperline
                                         if (Hyperline.Instance.hairTypes.Has(Hashing.FNV1Hash(chosenType)))
                                         {
                                             hairTypeList[dash] = Hashing.FNV1Hash(chosenType);
-                                            Logger.Log("Hyperline", "Type is... " + chosenType);
                                         }
                                         XElement tp = dashCountElement.Element("types");
                                         if (tp != null)
