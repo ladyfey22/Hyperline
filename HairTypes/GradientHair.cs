@@ -3,11 +3,17 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
 {
     public class GradientHair : IHairType
     {
+        private HSVColor color1;
+        private HSVColor color2;
+        private bool doRgbGradient = false;
+
         public GradientHair()
         {
             color1 = new HSVColor();
@@ -98,13 +104,26 @@ namespace Celeste.Mod.Hyperline
             return hash;
         }
 
+        public void Read(XElement element)
+        {
+            XElement color1Element = element.Element("color1");
+            XElement color2Element = element.Element("color2");
+            XElement doRGBElement = element.Element("doRgbGradient");
+            if (color1Element != null)
+                color1.FromString((string)color1Element);
+            if (color2Element != null)
+                color2.FromString((string)color2Element);
+            if (doRGBElement != null)
+                doRgbGradient = (bool)doRGBElement;
+        }
+
+        public void Write(XElement element)
+        {
+            element.Add(new XElement("color1", color1.ToHSVString()), new XElement("color2", color2.ToHSVString()), new XElement("doRgbGradient", doRgbGradient));
+        }
 
         public static string id = "Hyperline_GradientHair";
         public static uint hash = Hashing.FNV1Hash(id);
-
-        private HSVColor color1;
-        private HSVColor color2;
-        private bool doRgbGradient = false;
     }
 }
 

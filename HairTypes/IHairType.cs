@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
 {
@@ -53,11 +54,15 @@ namespace Celeste.Mod.Hyperline
         /// <param name="version"> The version array (size 3), form {Major,Minor,Sub} </param>
         void Read(BinaryReader reader, byte[] version);
 
+        void Read(XElement element);
+
         /// <summary>
         /// Writes the hair type to a stream.
         /// </summary>
         /// <param name="writer"> The stream to write to. </param>
         void Write(BinaryWriter writer);
+
+        void Write(XElement element);
 
         /// <summary>
         /// Creates a new instance of this hair type.

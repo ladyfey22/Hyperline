@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
 {
@@ -90,6 +91,20 @@ namespace Celeste.Mod.Hyperline
             return hash;
         }
 
+        public void Read(XElement element)
+        {
+            XElement satElement = element.Element("saturation");
+            XElement valElement = element.Element("value");
+            if (satElement != null)
+                saturation = (int)satElement;
+            if (valElement != null)
+                value = (int)valElement;
+        }
+
+        public void Write(XElement element)
+        {
+            element.Add(new XElement("saturation", saturation), new XElement("value", value));
+        }
 
         public static string id = "Hyperline_RainbowHair";
         public static uint hash = Hashing.FNV1Hash(id);

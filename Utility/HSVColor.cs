@@ -94,7 +94,7 @@ namespace Celeste.Mod.Hyperline
             return InternalColor;
         }
 
-        private void FromString(string ColorString)
+        public void FromString(string ColorString)
         {
 
             try
@@ -117,7 +117,7 @@ namespace Celeste.Mod.Hyperline
             }
             catch
             {
-                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value.\n");
+                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value "  + ColorString);
             }
             UpdateColor();
         }
@@ -140,6 +140,11 @@ namespace Celeste.Mod.Hyperline
         public override string ToString()
         {
             return InternalColor.R.ToString("X2") + InternalColor.G.ToString("X2") + InternalColor.B.ToString("X2");
+        }
+
+        public string ToHSVString()
+        {
+            return H.ToString("000")  + (S * 100).ToString("000") + (V * 100).ToString("000");
         }
 
         public void Read(BinaryReader reader)

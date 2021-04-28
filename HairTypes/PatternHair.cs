@@ -3,12 +3,15 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
 {
     public class PatternHair : IHairType
     {
         public const int MAX_PATTERN_COUNT = 10;
+        private HSVColor[] colorList;
+        private int patternCount;
 
         public PatternHair()
         {
@@ -107,10 +110,32 @@ namespace Celeste.Mod.Hyperline
             return hash;
         }
 
+        public void Read(XElement element)
+        {
+            XElement patternCountElement = element.Element("patternCount");
+            if (patternCountElement != null)
+                patternCount = (int)patternCountElement;
+            int index = 0;
+            foreach(XElement currentElement in element.Elements("color"))
+            {
+                if (index < colorList.Length)
+                {
+                    colorList[index].FromString((string)currentElement);
+                    index++;
+                }
+            }
+        }
+
+        public void Write(XElement element)
+        {
+            XElement[] elements = new XElement[colorList.Length + 1];
+            elements[0] = new XElement("patternCount", patternCount);
+            for (int i = 0; i < colorList.Length; i++)
+                elements[i + 1] = new XElement("color", colorList[i].ToHSVString());
+            element.Add(elements);
+        }
+
         public static string id = "Hyperline_PatternHair";
         public static uint hash = Hashing.FNV1Hash(id);
-
-        private HSVColor[] colorList;
-        private int patternCount;
     }
 }

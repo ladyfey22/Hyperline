@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
 {
@@ -28,7 +29,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 1, 17 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 1, 18 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -177,67 +178,152 @@ namespace Celeste.Mod.Hyperline
             }
         }
 
+        public void ReadV1_17(BinaryReader reader)
+        {
+            byte[] header = reader.ReadBytes(4);
+            if (header.SequenceEqual(oldHeader) || header.SequenceEqual(newHeader))
+            {
+                byte[] version = new byte[] { 0, 1, 7 };
+                if (header.SequenceEqual(newHeader))
+                    version = reader.ReadBytes(3);
+                Logger.Log(LogLevel.Debug, "Hyperline", "Hyperline loading settings file v" + version[0] + "." + version[1] + "." + version[2]);
+                if (version[0] == 0 && version[1] <= 1 && version[2] <= 15)
+                {
+                    ReadV1_15(reader);
+                    return;
+                }
+                Enabled = reader.ReadBoolean();
+                AllowMapHairColors = reader.ReadBoolean();
+                DoMaddyCrown = reader.ReadBoolean();
+                for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
+                {
+                    hairTypeList[i] = reader.ReadUInt32();
+                    if (!Hyperline.Instance.hairTypes.Has(hairTypeList[i]))
+                    {
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair type " + hairTypeList[i]);
+                        hairTypeList[i] = SolidHair.hash;
+                    }
+
+                    hairLengthList[i] = reader.ReadInt32();
+                    if (hairLengthList[i] < MIN_HAIR_LENGTH || hairLengthList[i] > MAX_HAIR_LENGTH)
+                    {
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair length " + hairLengthList[i]);
+                        hairLengthList[i] = 4;
+                    }
+
+                    hairSpeedList[i] = reader.ReadInt32();
+                    if (hairSpeedList[i] < MIN_HAIR_SPEED || hairSpeedList[i] > MAX_HAIR_SPEED)
+                    {
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair speed " + hairSpeedList[i]);
+                        hairSpeedList[i] = 0;
+                    }
+
+                    hairBangsSource[i] = reader.ReadString();
+                    hairTextureSource[i] = reader.ReadString();
+
+                    uint hairTypeCount = reader.ReadUInt32();
+                    for (uint j = 0u; j < hairTypeCount; j++)
+                    {
+                        uint id = reader.ReadUInt32();
+                        uint byteCount = reader.ReadUInt32();
+
+                        BinaryReader tmpReader = new BinaryReader(new MemoryStream(reader.ReadBytes((int)byteCount)));
+
+                        if (hairList[i].ContainsKey(id))
+                            hairList[i][id].Read(tmpReader, version);
+                        //if we don't know what type this is... throw it out
+                    }
+                }
+            }
+        }
+
         public override void Read(BinaryReader reader)
         {
             try
             {
                 byte[] header = reader.ReadBytes(4);
+                reader.BaseStream.Seek(-4, SeekOrigin.Current);
                 if (header.SequenceEqual(oldHeader) || header.SequenceEqual(newHeader))
+                    ReadV1_17(reader);
+                else
                 {
-                    byte[] version = new byte[] { 0, 1, 7 };
-                    if (header.SequenceEqual(newHeader))
-                        version = reader.ReadBytes(3);
-                    Logger.Log(LogLevel.Debug, "Hyperline", "Hyperline loading settings file v" + version[0] + "." + version[1] + "." + version[2]);
-                    if (version[0] == 0 && version[1] <= 1 && version[2] <= 15)
+                    MemoryStream currentReader = new MemoryStream(reader.ReadBytes((int)reader.BaseStream.Length));
+                    //    Logger.Log(LogLevel.Error, "Hyperline", "Settings file was found corrupted/invalid.");
+                    XDocument document = XDocument.Load(currentReader);
+                    XElement root = document.Element("root");
+
+                    if(root != null)
                     {
-                        ReadV1_15(reader);
-                        return;
-                    }
-                    Enabled = reader.ReadBoolean();
-                    AllowMapHairColors = reader.ReadBoolean();
-                    DoMaddyCrown = reader.ReadBoolean();
-                    for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
-                    {
-                        hairTypeList[i] = reader.ReadUInt32();
-                        if (!Hyperline.Instance.hairTypes.Has(hairTypeList[i]))
+                        XElement enabledElement = root.Element("enabled");
+                        if (enabledElement != null)
+                            Enabled = (bool)enabledElement;
+                        XElement allowMapColors = root.Element("allowMapColors");
+                        if (allowMapColors != null)
+                            AllowMapHairColors = (bool)allowMapColors;
+                        XElement doMaddyCrown = root.Element("doMaddyCrown");
+                        if (doMaddyCrown != null)
+                            DoMaddyCrown = (bool)doMaddyCrown;
+
+                        XElement dashesElement = root.Element("dashes");
+                        if (dashesElement != null)
                         {
-                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair type " + hairTypeList[i]);
-                            hairTypeList[i] = SolidHair.hash;
-                        }
-
-                        hairLengthList[i] = reader.ReadInt32();
-                        if (hairLengthList[i] < MIN_HAIR_LENGTH || hairLengthList[i] > MAX_HAIR_LENGTH)
-                        {
-                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair length " + hairLengthList[i]);
-                            hairLengthList[i] = 4;
-                        }
-
-                        hairSpeedList[i] = reader.ReadInt32();
-                        if (hairSpeedList[i] < MIN_HAIR_SPEED || hairSpeedList[i] > MAX_HAIR_SPEED)
-                        {
-                            Logger.Log(LogLevel.Warn, "Hyperline", "Settings file contained invalid hair speed " + hairSpeedList[i]);
-                            hairSpeedList[i] = 0;
-                        }
-
-                        hairBangsSource[i] = reader.ReadString();
-                        hairTextureSource[i] = reader.ReadString();
-
-                        uint hairTypeCount = reader.ReadUInt32();
-                        for (uint j = 0u; j < hairTypeCount; j++)
-                        {
-                            uint id = reader.ReadUInt32();
-                            uint byteCount = reader.ReadUInt32();
-
-                            BinaryReader tmpReader = new BinaryReader(new MemoryStream(reader.ReadBytes((int)byteCount)));
-
-                            if (hairList[i].ContainsKey(id))
-                                hairList[i][id].Read(tmpReader, version);
-                            //if we don't know what type this is... throw it out
+                            foreach (XElement dashCountElement in dashesElement.Elements("dash"))
+                            {
+                                XAttribute dashAttr = dashCountElement.Attribute("count");
+                                if (dashAttr != null)
+                                {
+                                    int dash = (int)dashAttr;
+                                    if (dash < Hyperline.MAX_DASH_COUNT)
+                                    {
+                                        XElement hairLengthElement = dashCountElement.Element("hairLength");
+                                        if (hairLengthElement != null)
+                                        {
+                                            hairLengthList[dash] = (int)hairLengthElement;
+                                            if (hairLengthList[dash] > MAX_HAIR_LENGTH || hairLengthList[dash] < MIN_HAIR_LENGTH)
+                                                hairLengthList[dash] = 4;
+                                        }
+                                        XElement hairSpeedElement = dashCountElement.Element("hairSpeed");
+                                        if (hairSpeedElement != null)
+                                        {
+                                            hairSpeedList[dash] = (int)hairSpeedElement;
+                                            if (hairSpeedList[dash] > MAX_HAIR_SPEED || hairSpeedList[dash] < MIN_HAIR_SPEED)
+                                                hairSpeedList[dash] = 0;
+                                        }
+                                        XElement hairBangsElement = dashCountElement.Element("bangsTexture");
+                                        if (hairBangsElement != null)
+                                            hairBangsSource[dash] = (string)hairBangsElement;
+                                        XElement hairTextureElement = dashCountElement.Element("hairTexture");
+                                        if (hairTextureElement != null)
+                                            hairTextureSource[dash] = (string)hairTextureElement;
+                                        string chosenType = SolidHair.id;
+                                        XElement hairTypeElement = dashCountElement.Element("type");
+                                        if (hairTypeElement != null)
+                                            chosenType = (string)hairTypeElement;
+                                        if (Hyperline.Instance.hairTypes.Has(Hashing.FNV1Hash(chosenType)))
+                                        {
+                                            hairTypeList[dash] = Hashing.FNV1Hash(chosenType);
+                                            Logger.Log("Hyperline", "Type is... " + chosenType);
+                                        }
+                                        XElement tp = dashCountElement.Element("types");
+                                        if (tp != null)
+                                        {
+                                            foreach (XElement currentType in tp.Elements())
+                                            {
+                                                uint type = Hashing.FNV1Hash(currentType.Name.LocalName);
+                                                IHairType hair = Hyperline.Instance.hairTypes.CreateNewHairType(type);
+                                                if (hair != null)
+                                                {
+                                                    hair.Read(currentType);
+                                                    hairList[dash][type] = hair;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                else
-                    Logger.Log(LogLevel.Error, "Hyperline", "Settings file was found corrupted/invalid.");
             }
             catch (Exception exception)
             {
@@ -248,35 +334,37 @@ namespace Celeste.Mod.Hyperline
 
         public override void Write(BinaryWriter writer)
         {
-            writer.Write(newHeader, 0, 4);
-            writer.Write(version, 0, 3);
-            writer.Write(Enabled);
-            writer.Write(AllowMapHairColors);
-            writer.Write(DoMaddyCrown);
-            for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
+            MemoryStream currentWriter = new MemoryStream();
+            XDocument document = new XDocument();
+            XElement root = new XElement("root");
+            root.Add(new XElement("enabled", Enabled), new XElement("allowMapHairColor", AllowMapHairColors),
+                         new XElement("doMaddyCrown", DoMaddyCrown));
+
+            XElement dashesElement = new XElement("dashes");
+            for(int i=0; i < Hyperline.MAX_DASH_COUNT; i++)
             {
-                writer.Write(hairTypeList[i]);
-                writer.Write(hairLengthList[i]);
-                writer.Write(hairSpeedList[i]);
-                writer.Write(hairBangsSource[i]);
-                writer.Write(hairTextureSource[i]);
+                XElement dashCountElement = new XElement("dash", new XAttribute("count", i));
+                dashCountElement.Add(new XElement("hairLength", hairLengthList[i]), new XElement("hairSpeed", hairSpeedList[i]),
+                                     new XElement("bangsTexture", hairBangsSource[i]), new XElement("hairTexture", hairTextureSource[i]));
+                dashCountElement.Add(new XElement("type", Hyperline.Instance.hairTypes.GetType(hairTypeList[i]).GetId()));
 
-                uint hairTypeCount = (uint)hairList[i].Count;
-                writer.Write(hairTypeCount);
-                foreach (KeyValuePair<uint, IHairType> hair in hairList[i])
+                XElement typesElement = new XElement("types");
+                foreach(KeyValuePair<uint, IHairType> tp in hairList[i])
                 {
-                    uint id = hair.Key;
-                    writer.Write(id);
-
-                    MemoryStream memStream = new MemoryStream();
-                    BinaryWriter tmpWriter = new BinaryWriter(memStream);
-                    hair.Value.Write(tmpWriter);
-                    uint byteCount = (uint)memStream.Length;
-                    writer.Write(byteCount);
-                    writer.Write(memStream.ToArray(), 0, (int)byteCount);
+                    XElement tpElement = new XElement(tp.Value.GetId());
+                    tp.Value.Write(tpElement);
+                    typesElement.Add(tpElement);
                 }
-            }
 
+                dashCountElement.Add(typesElement);
+                dashesElement.Add(dashCountElement);
+            }
+            root.Add(dashesElement);
+            document.Add(root);
+            document.Save(currentWriter);
+
+            byte[] bytes = currentWriter.ToArray();
+            writer.Write(bytes, 0, bytes.Length);
         }
     }
 }
