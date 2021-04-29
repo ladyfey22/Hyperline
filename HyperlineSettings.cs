@@ -29,7 +29,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 1, 18 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 1, 19 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -281,6 +281,9 @@ namespace Celeste.Mod.Hyperline
                                             if (hairLengthList[dash] > MAX_HAIR_LENGTH || hairLengthList[dash] < MIN_HAIR_LENGTH)
                                                 hairLengthList[dash] = 4;
                                         }
+                                        else
+                                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dash hair length element.");
+
                                         XElement hairSpeedElement = dashCountElement.Element("hairSpeed");
                                         if (hairSpeedElement != null)
                                         {
@@ -288,45 +291,64 @@ namespace Celeste.Mod.Hyperline
                                             if (hairSpeedList[dash] > MAX_HAIR_SPEED || hairSpeedList[dash] < MIN_HAIR_SPEED)
                                                 hairSpeedList[dash] = 0;
                                         }
+                                        else
+                                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dash hair speed element.");
+
                                         XElement hairBangsElement = dashCountElement.Element("bangsTexture");
                                         if (hairBangsElement != null)
                                             hairBangsSource[dash] = (string)hairBangsElement;
                                         XElement hairTextureElement = dashCountElement.Element("hairTexture");
                                         if (hairTextureElement != null)
                                             hairTextureSource[dash] = (string)hairTextureElement;
+
                                         string chosenType = SolidHair.id;
                                         XElement hairTypeElement = dashCountElement.Element("type");
                                         if (hairTypeElement != null)
                                             chosenType = (string)hairTypeElement;
+                                        else
+                                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dash hair type element.");
                                         if (Hyperline.Instance.hairTypes.Has(Hashing.FNV1Hash(chosenType)))
-                                        {
                                             hairTypeList[dash] = Hashing.FNV1Hash(chosenType);
-                                        }
+ 
                                         XElement tp = dashCountElement.Element("types");
                                         if (tp != null)
                                         {
                                             foreach (XElement currentType in tp.Elements())
                                             {
                                                 uint type = Hashing.FNV1Hash(currentType.Name.LocalName);
-                                                IHairType hair = Hyperline.Instance.hairTypes.CreateNewHairType(type);
-                                                if (hair != null)
+                                                try
                                                 {
-                                                    hair.Read(currentType);
-                                                    hairList[dash][type] = hair;
+                                                    IHairType hair = Hyperline.Instance.hairTypes.CreateNewHairType(type);
+                                                    if (hair != null)
+                                                    {
+                                                        hair.Read(currentType);
+                                                        hairList[dash][type] = hair;
+                                                    }
+                                                    else
+                                                        Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline contained invalid hair type " + currentType.Name);
+                                                }
+                                                catch(Exception exception)
+                                                {
+                                                    Logger.Log(LogLevel.Warn, "Hyperline", "Exception occured while loading hair type " + currentType.Name.LocalName + " dash count " + dash + "\n" + exception);
                                                 }
                                             }
                                         }
+                                        else
+                                            Logger.Log(LogLevel.Warn, "Hyperline", "XML file missing types for dash count " + dash);
                                     }
                                 }
                             }
                         }
+                        else
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dashs element.");
                     }
+                    else
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing root element.");
                 }
             }
             catch (Exception exception)
             {
                 Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception.ToString());
-                ResetSettings();
             }
         }
 

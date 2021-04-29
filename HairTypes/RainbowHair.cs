@@ -62,7 +62,7 @@ namespace Celeste.Mod.Hyperline
         }
         public IHairType CreateNew()
         {
-            return new GradientHair();
+            return new RainbowHair();
         }
 
         public IHairType CreateNew(int i)
