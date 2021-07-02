@@ -9,11 +9,35 @@ namespace Celeste.Mod.Hyperline
     {
 
         public const uint MAX_DASH_COUNT = 10;
+
+        public static Hyperline Instance;
+
+        public override Type SettingsType => typeof(HyperlineSettings);
+        public static HyperlineSettings Settings => (HyperlineSettings)Instance._Settings;
+
+        public override Type SessionType => typeof(HyperlineSession);
+        public static HyperlineSession Session => (HyperlineSession)Instance._Session;
+
+        public override Type SaveDataType => null;
+
+        public TriggerManager triggerManager;
+        public PresetManager presetManager;
+        public HairTypeManager hairTypes;
+        public HyperlineUI UI;
+
+        public Color lastColor;
+        private int lastHairLength;
+        private float time;
+        private bool isHooked = false;
+        public Sprite maddyCrownSprite;
+
         public Hyperline()
         {
             UI = new HyperlineUI();
-            lastColor = new Color();
             triggerManager = new TriggerManager();
+            presetManager = new PresetManager();
+
+            lastColor = new Color();
             Instance = this;
             lastHairLength = 4;
             //add the default hair types
@@ -22,25 +46,8 @@ namespace Celeste.Mod.Hyperline
             AddHairType(new PatternHair());
             AddHairType(new SolidHair());
             AddHairType(new RainbowHair());
+            AddHairType(new DefaultHair());
         }
-
-        public static Hyperline Instance;
-
-        public HairTypeManager hairTypes;
-        public override Type SettingsType => typeof(HyperlineSettings);
-        public static HyperlineSettings Settings => (HyperlineSettings)Instance._Settings;
-
-        public TriggerManager triggerManager;
-
-
-        public HyperlineUI UI;
-        public override Type SaveDataType => null;
-
-        private Color lastColor;
-        private int lastHairLength;
-        private float time;
-        private bool isHooked = false;
-        private Sprite maddyCrownSprite;
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
         {
@@ -83,6 +90,7 @@ namespace Celeste.Mod.Hyperline
         public override void LoadContent(bool firstLoad)
         {
             Settings.LoadTextures();
+            presetManager.LoadContent();
         }
 
         private static void OnUnpause(On.Celeste.Level.orig_EndPauseEffects orig, Level self)
@@ -104,6 +112,7 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Player.Added -= PlayerAdded;
             On.Celeste.Player.Update -= PlayerUpdate;
             On.Celeste.Level.EndPauseEffects -= OnUnpause;
+            On.Celeste.PlayerHair.Render -= RenderHair;
             TriggerManager.Unload();
             isHooked = false;
         }
@@ -120,8 +129,22 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Player.Added += PlayerAdded;
             On.Celeste.Player.Update += PlayerUpdate;
             On.Celeste.Level.EndPauseEffects += OnUnpause;
+            On.Celeste.PlayerHair.Render += RenderHair;
             TriggerManager.Load();
             isHooked = true;
+        }
+
+        public void RenderHair(On.Celeste.PlayerHair.orig_Render orig, PlayerHair self)
+        {
+            if (!(self.Entity is Player) || !Settings.Enabled || (self.Entity as Player).Dashes > MAX_DASH_COUNT)
+            {
+                orig(self);
+                return;
+            }
+
+            Player player = self.Entity as Player;
+            IHairType hair = Instance.triggerManager.GetHair(player.Dashes);
+            hair.Render(orig, self);
         }
 
         public static MTexture GetHairTexture(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
@@ -151,10 +174,11 @@ namespace Celeste.Mod.Hyperline
 
         public static void PlayerUpdate(On.Celeste.Player.orig_Update orig, Player player)
         {
-            if (Settings.Enabled)
+            if(Settings.Enabled)
             {
-                player.OverrideHairColor = GetCurrentColor(player.Dashes, 0, player.Hair);
                 Instance.maddyCrownSprite = null;
+                IHairType currentHair = Instance.triggerManager.GetHair(player.Dashes);
+                currentHair.PlayerUpdate(Instance.lastColor, player);
             }
             else
                 player.OverrideHairColor = null;
@@ -171,9 +195,9 @@ namespace Celeste.Mod.Hyperline
 
         public void UpdateHairLength(PlayerHair self)
         {
-            Player player = self.Entity as Player;
-            if (Settings.Enabled && player != null)
+            if (Settings.Enabled && self.Entity is Player)
             {
+                Player player = self.Entity as Player;
                 if (player.StateMachine.State == 5)
                     player.Sprite.HairCount = 1;
                 else if (player.StateMachine.State != 19)
@@ -191,10 +215,15 @@ namespace Celeste.Mod.Hyperline
             Color colorOrig = orig(self, index);
             if (!(self.Entity is Player) || !Settings.Enabled)
                 return colorOrig;
+            
             Player player = self.Entity as Player;
+
+            if (player.OverrideHairColor.HasValue && player.Dashes == 0)
+                Logger.Log("Hyperline", "No dash has override");
+
             if (player.Dashes >= MAX_DASH_COUNT || player.Dashes < 0)
                 return colorOrig;
-            Color ReturnC = GetCurrentColor(((Player)self.Entity).Dashes, index, self);
+            Color ReturnC = GetCurrentColor(colorOrig, ((Player)self.Entity).Dashes, index, self);
             if (index == 0)
             {
                 Instance.UpdateMaddyCrown(self.Entity as Player);
@@ -204,12 +233,11 @@ namespace Celeste.Mod.Hyperline
             return ReturnC;
         }
 
-        public static Color GetCurrentColor(int dashes, int index, PlayerHair self)
+        public static Color GetCurrentColor(Color colorOrig, int dashes, int index, PlayerHair self)
         {
             if (dashes >= MAX_DASH_COUNT)
-            {
-                return new Color(0, 0, 0);
-            }
+                return colorOrig;
+
             int speed = Instance.triggerManager.GetHairSpeed(dashes);
             int length = Instance.triggerManager.GetHairLength(dashes);
             float phaseShift = Math.Abs(((float)index / ((float)length)) - 0.01f);
@@ -220,7 +248,7 @@ namespace Celeste.Mod.Hyperline
             IHairType hair = Instance.triggerManager.GetHair(dashes);
             if (hair != null)
             {
-                returnV = hair.GetColor(phase);
+                returnV = hair.GetColor(colorOrig, phase);
                 if (returnV == null)
                     returnV = new Color(0, 0, 0);
             }
@@ -229,15 +257,19 @@ namespace Celeste.Mod.Hyperline
 
         private void PlayerHair_AfterUpdate(On.Celeste.PlayerHair.orig_AfterUpdate orig, PlayerHair self)
         {
-            if ((self.Entity is Player) && Settings.Enabled)
+            if (!(self.Entity is Player) || !Settings.Enabled || (self.Entity as Player).Dashes > MAX_DASH_COUNT)
             {
-                Player player = (Player)self.Entity;
-                player.Hair.Color = GetCurrentColor(player.Dashes, 0, player.Hair);
-                Instance.time += Engine.DeltaTime;
-                maddyCrownSprite = null;
-                Instance.UpdateHairLength(self);
+                orig(self);
+                return;
             }
-            orig(self);
+
+            Player player = (Player)self.Entity;
+            Instance.time += Engine.DeltaTime;
+            maddyCrownSprite = null;
+            Instance.UpdateHairLength(self);
+
+            IHairType hair = Instance.triggerManager.GetHair(player.Dashes);
+            hair.AfterUpdate(orig, self);
         }
 
         public override void Initialize()
@@ -248,7 +280,7 @@ namespace Celeste.Mod.Hyperline
         {
             Color colorOrig = orig(self, wasDashB);
             if (Settings.Enabled)
-                return GetCurrentColor(self.Dashes, 0, self.Hair);
+                return GetCurrentColor(Instance.lastColor, self.Dashes, 0, self.Hair);
             return colorOrig;
         }
 

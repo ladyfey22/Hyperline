@@ -16,29 +16,40 @@ namespace Celeste.Mod.Hyperline
             value = 10;
         }
 
-        public string GetHairName()
+        public RainbowHair(RainbowHair rvalue)
+        {
+            saturation = rvalue.saturation;
+            value = rvalue.value;
+        }
+
+        public override IHairType Clone()
+        {
+            return new RainbowHair(this);
+        }
+
+        public override string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_RAINBOW";
         }
-        public Color GetColor(float phase)
+        public override Color GetColor(Color colorOrig, float phase)
         {
             HSVColor returnV = new HSVColor(359 * phase, value / 10.0f, saturation / 10.0f);
             return returnV.ToColor();
         }
 
-        public void Read(BinaryReader reader, byte[] version)
+        public override void Read(BinaryReader reader, byte[] version)
         {
             saturation = reader.ReadInt32();
             value = reader.ReadInt32();
         }
 
-        public void Write(BinaryWriter writer)
+        public override void Write(BinaryWriter writer)
         {
             writer.Write(saturation);
             writer.Write(value);
         }
 
-        private static string NumToString(int num)
+        public static string NumToString(int num)
         {
             return num.ToString();
         }
@@ -53,24 +64,24 @@ namespace Celeste.Mod.Hyperline
             value = v;
         }
 
-        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Slider("Saturation:", NumToString, 0, 10, saturation).Change(UpdateSaturation));
             colorMenus.Add(new TextMenu.Slider("Value:", NumToString, 0, 10, value).Change(UpdateValue));
             return colorMenus;
         }
-        public IHairType CreateNew()
+        public override IHairType CreateNew()
         {
             return new RainbowHair();
         }
 
-        public IHairType CreateNew(int i)
+        public override IHairType CreateNew(int i)
         {
             return new RainbowHair();
         }
 
-        public IHairType CreateNew(string str)
+        public override IHairType CreateNew(string str)
         {
             RainbowHair returnV = new RainbowHair();
             string[] tokens = str.Split(',');
@@ -81,17 +92,17 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
-        public string GetId()
+        public override string GetId()
         {
             return id;
         }
 
-        public uint GetHash()
+        public override uint GetHash()
         {
             return hash;
         }
 
-        public void Read(XElement element)
+        public override void Read(XElement element)
         {
             XElement satElement = element.Element("saturation");
             XElement valElement = element.Element("value");
@@ -101,7 +112,7 @@ namespace Celeste.Mod.Hyperline
                 value = (int)valElement;
         }
 
-        public void Write(XElement element)
+        public override void Write(XElement element)
         {
             element.Add(new XElement("saturation", saturation), new XElement("value", value));
         }

@@ -29,7 +29,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 1, 19 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 2, 0 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -251,7 +251,7 @@ namespace Celeste.Mod.Hyperline
                     XDocument document = XDocument.Load(currentReader);
                     XElement root = document.Element("root");
 
-                    if(root != null)
+                    if (root != null)
                     {
                         XElement enabledElement = root.Element("enabled");
                         if (enabledElement != null)
@@ -309,7 +309,7 @@ namespace Celeste.Mod.Hyperline
                                             Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dash hair type element.");
                                         if (Hyperline.Instance.hairTypes.Has(Hashing.FNV1Hash(chosenType)))
                                             hairTypeList[dash] = Hashing.FNV1Hash(chosenType);
- 
+
                                         XElement tp = dashCountElement.Element("types");
                                         if (tp != null)
                                         {
@@ -327,7 +327,7 @@ namespace Celeste.Mod.Hyperline
                                                     else
                                                         Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline contained invalid hair type " + currentType.Name);
                                                 }
-                                                catch(Exception exception)
+                                                catch (Exception exception)
                                                 {
                                                     Logger.Log(LogLevel.Warn, "Hyperline", "Exception occured while loading hair type " + currentType.Name.LocalName + " dash count " + dash + "\n" + exception);
                                                 }
@@ -361,7 +361,7 @@ namespace Celeste.Mod.Hyperline
                          new XElement("doMaddyCrown", DoMaddyCrown));
 
             XElement dashesElement = new XElement("dashes");
-            for(int i=0; i < Hyperline.MAX_DASH_COUNT; i++)
+            for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)
             {
                 XElement dashCountElement = new XElement("dash", new XAttribute("count", i));
                 dashCountElement.Add(new XElement("hairLength", hairLengthList[i]), new XElement("hairSpeed", hairSpeedList[i]),
@@ -369,7 +369,7 @@ namespace Celeste.Mod.Hyperline
                 dashCountElement.Add(new XElement("type", Hyperline.Instance.hairTypes.GetType(hairTypeList[i]).GetId()));
 
                 XElement typesElement = new XElement("types");
-                foreach(KeyValuePair<uint, IHairType> tp in hairList[i])
+                foreach (KeyValuePair<uint, IHairType> tp in hairList[i])
                 {
                     XElement tpElement = new XElement(tp.Value.GetId());
                     tp.Value.Write(tpElement);

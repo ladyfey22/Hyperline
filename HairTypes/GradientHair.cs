@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
@@ -21,11 +20,24 @@ namespace Celeste.Mod.Hyperline
             doRgbGradient = false;
         }
 
-        public string GetHairName()
+        public GradientHair(GradientHair rvalue)
+        {
+            color1 = rvalue.color1.Clone();
+            color2 = rvalue.color2.Clone();
+            doRgbGradient = rvalue.doRgbGradient;
+        }
+
+        public override IHairType Clone()
+        {
+            return new GradientHair(this);
+        }
+
+        public override string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_GRADIENT";
         }
-        public Color GetColor(float phase)
+
+        public override Color GetColor(Color colorOrig, float phase)
         {
             phase = (float)Math.Sin(2 * Math.PI * (phase)) / 2.0f + 0.5f;
             if (doRgbGradient)
@@ -37,21 +49,22 @@ namespace Celeste.Mod.Hyperline
                color1.V + (color2.V - color1.V) * phase).ToColor();
         }
 
-        public void Read(BinaryReader reader, byte[] version)
+        public override void Read(BinaryReader reader, byte[] version)
         {
             color1.Read(reader);
             color2.Read(reader);
             if (version[0] >= 0 && version[1] >= 1 && version[2] >= 8)
                 doRgbGradient = reader.ReadBoolean();
         }
-        public void Write(BinaryWriter writer)
+
+        public override void Write(BinaryWriter writer)
         {
             color1.Write(writer);
             color2.Write(writer);
             writer.Write(doRgbGradient);
         }
 
-        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Button("Color 1: " + color1.ToString()).Pressed(() =>
@@ -71,17 +84,17 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
-        public IHairType CreateNew()
+        public override IHairType CreateNew()
         {
             return new GradientHair();
         }
 
-        public IHairType CreateNew(int i)
+        public override IHairType CreateNew(int i)
         {
             return new GradientHair();
         }
 
-        public IHairType CreateNew(string str)
+        public override IHairType CreateNew(string str)
         {
             GradientHair returnV = new GradientHair();
             string[] tokenList = str.Split(',');
@@ -94,17 +107,17 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
-        public string GetId()
+        public override string GetId()
         {
             return id;
         }
 
-        public uint GetHash()
+        public override uint GetHash()
         {
             return hash;
         }
 
-        public void Read(XElement element)
+        public override void Read(XElement element)
         {
             XElement color1Element = element.Element("color1");
             XElement color2Element = element.Element("color2");
@@ -117,7 +130,7 @@ namespace Celeste.Mod.Hyperline
                 doRgbGradient = (bool)doRGBElement;
         }
 
-        public void Write(XElement element)
+        public override void Write(XElement element)
         {
             element.Add(new XElement("color1", color1.ToHSVString()), new XElement("color2", color2.ToHSVString()), new XElement("doRgbGradient", doRgbGradient));
         }

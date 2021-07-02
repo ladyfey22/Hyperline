@@ -21,17 +21,30 @@ namespace Celeste.Mod.Hyperline
             patternCount = 0;
         }
 
+        public PatternHair(PatternHair rvalue)
+        {
+            colorList = new HSVColor[MAX_PATTERN_COUNT];
+            for (int i = 0; i < colorList.Length; i++)
+                colorList[i] = rvalue.colorList[i].Clone();
+            patternCount = rvalue.patternCount;
+        }
+
+        public override IHairType Clone()
+        {
+            return new PatternHair(this);
+        }
+
         public static string NumToString(int i)
         {
             return i.ToString();
         }
 
-        public string GetHairName()
+        public override string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_PATTERN";
         }
 
-        public Color GetColor(float phase)
+        public override Color GetColor(Color colorOrig, float phase)
         {
             if (patternCount == 0)
                 return Color.White;
@@ -39,7 +52,7 @@ namespace Celeste.Mod.Hyperline
             index = Math.Min(index, patternCount - 1);
             return colorList[index].ToColor();
         }
-        public void Read(BinaryReader reader, byte[] version)
+        public override void Read(BinaryReader reader, byte[] version)
         {
             patternCount = reader.ReadInt32();
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
@@ -48,7 +61,7 @@ namespace Celeste.Mod.Hyperline
                 colorList[i].Read(reader);
             }
         }
-        public void Write(BinaryWriter writer)
+        public override void Write(BinaryWriter writer)
         {
             writer.Write(patternCount);
             for (int i = 0; i < MAX_PATTERN_COUNT; i++)
@@ -60,8 +73,7 @@ namespace Celeste.Mod.Hyperline
             patternCount = v;
         }
 
-
-        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Slider("Pattern Count: ", NumToString, 1, MAX_PATTERN_COUNT, patternCount).Change(UpdatePatternCount));
@@ -77,17 +89,17 @@ namespace Celeste.Mod.Hyperline
             return colorMenus;
         }
 
-        public IHairType CreateNew()
+        public override IHairType CreateNew()
         {
             return new PatternHair();
         }
 
-        public IHairType CreateNew(int i)
+        public override IHairType CreateNew(int i)
         {
             return new PatternHair();
         }
 
-        public IHairType CreateNew(string str)
+        public override IHairType CreateNew(string str)
         {
             PatternHair returnV = new PatternHair();
             string[] tokens = str.Split(',');
@@ -100,23 +112,23 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
-        public string GetId()
+        public override string GetId()
         {
             return id;
         }
 
-        public uint GetHash()
+        public override uint GetHash()
         {
             return hash;
         }
 
-        public void Read(XElement element)
+        public override void Read(XElement element)
         {
             XElement patternCountElement = element.Element("patternCount");
             if (patternCountElement != null)
                 patternCount = (int)patternCountElement;
             int index = 0;
-            foreach(XElement currentElement in element.Elements("color"))
+            foreach (XElement currentElement in element.Elements("color"))
             {
                 if (index < colorList.Length)
                 {
@@ -126,7 +138,7 @@ namespace Celeste.Mod.Hyperline
             }
         }
 
-        public void Write(XElement element)
+        public override void Write(XElement element)
         {
             XElement[] elements = new XElement[colorList.Length + 1];
             elements[0] = new XElement("patternCount", patternCount);

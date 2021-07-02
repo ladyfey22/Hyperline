@@ -18,6 +18,14 @@ namespace Celeste.Mod.Hyperline
             UpdateColor();
         }
 
+        public HSVColor(HSVColor rvalue)
+        {
+            H = rvalue.H;
+            S = rvalue.S;
+            V = rvalue.V;
+            UpdateColor();
+        }
+
         public HSVColor(string code)
         {
             FromString(code);
@@ -26,6 +34,11 @@ namespace Celeste.Mod.Hyperline
         public HSVColor(Color inColor)
         {
             FromColor(inColor);
+        }
+
+        public HSVColor Clone()
+        {
+            return new HSVColor(this);
         }
 
         public void FromColor(Color ColorIn)
@@ -117,7 +130,7 @@ namespace Celeste.Mod.Hyperline
             }
             catch
             {
-                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value "  + ColorString);
+                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value " + ColorString);
             }
             UpdateColor();
         }
@@ -144,7 +157,7 @@ namespace Celeste.Mod.Hyperline
 
         public string ToHSVString()
         {
-            return H.ToString("000")  + (S * 100).ToString("000") + (V * 100).ToString("000");
+            return H.ToString("000") + (S * 100).ToString("000") + (V * 100).ToString("000");
         }
 
         public void Read(BinaryReader reader)

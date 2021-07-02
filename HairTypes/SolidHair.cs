@@ -18,27 +18,37 @@ namespace Celeste.Mod.Hyperline
             C = color;
         }
 
-        public string GetHairName()
+        public SolidHair(SolidHair rvalue)
+        {
+            C = rvalue.C.Clone();
+        }
+
+        public override IHairType Clone()
+        {
+            return new SolidHair(this);
+        }
+
+        public override string GetHairName()
         {
             return "MODOPTIONS_HYPERLINE_SOLID";
         }
 
-        public Color GetColor(float phase)
+        public override Color GetColor(Color colorOrig, float phase)
         {
             return C.ToColor();
         }
 
-        public void Read(BinaryReader reader, byte[] version)
+        public override void Read(BinaryReader reader, byte[] version)
         {
             C.Read(reader);
         }
 
-        public void Write(BinaryWriter writer)
+        public override void Write(BinaryWriter writer)
         {
             C.Write(writer);
         }
 
-        public List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
+        public override List<TextMenu.Item> CreateMenu(TextMenu menu, bool inGame)
         {
             List<TextMenu.Item> colorMenus = new List<TextMenu.Item>();
             colorMenus.Add(new TextMenu.Button("Color 1: " + C.ToString()).Pressed(() =>
@@ -48,17 +58,17 @@ namespace Celeste.Mod.Hyperline
             }));
             return colorMenus;
         }
-        public IHairType CreateNew()
+        public override IHairType CreateNew()
         {
             return new SolidHair();
         }
 
-        public IHairType CreateNew(int i)
+        public override IHairType CreateNew(int i)
         {
             return new SolidHair(defaultColors[i % defaultColors.Length]);
         }
 
-        public IHairType CreateNew(string str)
+        public override IHairType CreateNew(string str)
         {
             SolidHair returnV = new SolidHair();
             string[] tokens = str.Split(',');
@@ -67,24 +77,24 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
-        public string GetId()
+        public override string GetId()
         {
             return id;
         }
 
-        public uint GetHash()
+        public override uint GetHash()
         {
             return hash;
         }
 
-        public void Read(XElement element)
+        public override void Read(XElement element)
         {
             XElement colorElement = element.Element("color");
             if (colorElement != null)
                 C.FromString((string)colorElement);
         }
 
-        public void Write(XElement element)
+        public override void Write(XElement element)
         {
             element.Add(new XElement("color", C.ToHSVString()));
         }

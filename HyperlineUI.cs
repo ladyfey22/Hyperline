@@ -8,6 +8,7 @@ namespace Celeste.Mod.Hyperline
 
         private HyperlineSettings Settings => Hyperline.Settings;
         private static int lastDash = 0;
+        private static int currentPreset = 0;
         private TextMenu.Option<bool> enabledText;
         private TextMenu.Option<bool> allowMapHairText;
         private TextMenu.Option<bool> maddyCrownText;
@@ -58,6 +59,34 @@ namespace Celeste.Mod.Hyperline
             return returnV;
         }
 
+        public void CopyPreset()
+        {
+            if(currentPreset < Hyperline.Instance.presetManager.presets.Count)
+            {
+                Logger.Log("Hyperline", "Applying preset " + Hyperline.Instance.presetManager.presets[currentPreset].Key);
+                Hyperline.Instance.presetManager.presets[currentPreset].Value.Apply();
+                Audio.Play("event:/ui/main/button_back");
+                OuiModOptions.Instance.Overworld.Goto<OuiModOptions>();
+            }
+        }
+
+        public void CreatePresetMenu(TextMenu menu)
+        {
+            if (Hyperline.Instance.presetManager.presets.Count != 0)
+            {
+                List<KeyValuePair<uint, string>> enumerableList = new List<KeyValuePair<uint, string>>();
+                for (uint i = 0; i < Hyperline.Instance.presetManager.presets.Count; i++)
+                    enumerableList.Add(new KeyValuePair<uint, string>(i, Hyperline.Instance.presetManager.presets[(int)i].Key));
+                TextMenuExt.EnumerableSlider<uint> slider = new TextMenuExt.EnumerableSlider<uint>("Preset:", enumerableList, 0);
+                slider.Change(v => { currentPreset = (int)v; });
+                menu.Add(slider);
+
+                TextMenu.Button applyButton = new TextMenu.Button("Apply Preset");
+                applyButton.Pressed(CopyPreset);
+                menu.Add(applyButton);
+            }
+        }
+
         public void SetHairLength(int dashCount, int hairLength)
         {
             Settings.hairLengthList[dashCount] = hairLength;
@@ -70,12 +99,15 @@ namespace Celeste.Mod.Hyperline
 
         public void CreateMenu(TextMenu menu, bool inGame)
         {
+            currentPreset = 0;
             enabledText = new TextMenu.OnOff(Dialog.Clean("MODOPTIONS_HYPERLINE_ENABLED"), Settings.Enabled).Change(EnabledToggled);
             allowMapHairText = new TextMenu.OnOff(Dialog.Clean("MODOPTIONS_HYPERLINE_ALLOWMAPHAIR"), Settings.AllowMapHairColors).Change(v => Settings.AllowMapHairColors = v);
             maddyCrownText = new TextMenu.OnOff("Maddy Crown Support:", Settings.DoMaddyCrown).Change(v => { Settings.DoMaddyCrown = v; });
             menu.Add(enabledText);
             menu.Add(allowMapHairText);
             menu.Add(maddyCrownText);
+            CreatePresetMenu(menu);
+
             colorMenus = new List<List<List<TextMenu.Item>>>();    //dashes
             dashCountMenu = new TextMenuExt.OptionSubMenu("Dashes");
             dashCountMenu.SetInitialSelection(lastDash);
