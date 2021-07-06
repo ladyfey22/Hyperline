@@ -64,11 +64,13 @@ namespace Celeste.Mod.Hyperline
         {
             Logger.Log(LogLevel.Info, "Hyperline", "Starting hyperline Version " + Hyperline.Settings.version[0] + "-" + Hyperline.Settings.version[1] + "-" + Hyperline.Settings.version[2]);
             HookStuff();
+            On.Celeste.Player.Update += PlayerUpdate;
         }
 
         public override void Unload()
         {
             UnhookStuff();
+            On.Celeste.Player.Update -= PlayerUpdate;
         }
 
         private void UpdateMaddyCrown(Player player)
@@ -110,7 +112,6 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.PlayerHair.AfterUpdate -= PlayerHair_AfterUpdate;
             On.Celeste.DeathEffect.Draw -= Death;
             On.Celeste.Player.Added -= PlayerAdded;
-            On.Celeste.Player.Update -= PlayerUpdate;
             On.Celeste.Level.EndPauseEffects -= OnUnpause;
             On.Celeste.PlayerHair.Render -= RenderHair;
             TriggerManager.Unload();
@@ -127,7 +128,6 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.PlayerHair.AfterUpdate += PlayerHair_AfterUpdate;
             On.Celeste.DeathEffect.Draw += Death;
             On.Celeste.Player.Added += PlayerAdded;
-            On.Celeste.Player.Update += PlayerUpdate;
             On.Celeste.Level.EndPauseEffects += OnUnpause;
             On.Celeste.PlayerHair.Render += RenderHair;
             TriggerManager.Load();
@@ -144,7 +144,10 @@ namespace Celeste.Mod.Hyperline
 
             Player player = self.Entity as Player;
             IHairType hair = Instance.triggerManager.GetHair(player.Dashes);
-            hair.Render(orig, self);
+            if(hair != null)
+                hair.Render(orig, self);
+            else
+                orig(self);
         }
 
         public static MTexture GetHairTexture(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
@@ -217,9 +220,6 @@ namespace Celeste.Mod.Hyperline
                 return colorOrig;
             
             Player player = self.Entity as Player;
-
-            if (player.OverrideHairColor.HasValue && player.Dashes == 0)
-                Logger.Log("Hyperline", "No dash has override");
 
             if (player.Dashes >= MAX_DASH_COUNT || player.Dashes < 0)
                 return colorOrig;

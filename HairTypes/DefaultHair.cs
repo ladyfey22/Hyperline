@@ -31,7 +31,6 @@ namespace Celeste.Mod.Hyperline
 
         public override Color GetColor(Color colorOrig, float phase)
         {
-            Logger.Log("Hyperline", "Default color gotten " + colorOrig.R + " " + colorOrig.G + " " + colorOrig.B);
             return colorOrig;
         }
 
