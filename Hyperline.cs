@@ -177,11 +177,12 @@ namespace Celeste.Mod.Hyperline
 
         public static void PlayerUpdate(On.Celeste.Player.orig_Update orig, Player player)
         {
-            if(Settings.Enabled)
+            if(Settings.Enabled && !(!Settings.DoFeatherColor && player.StateMachine.State == 19))
             {
                 Instance.maddyCrownSprite = null;
                 IHairType currentHair = Instance.triggerManager.GetHair(player.Dashes);
-                currentHair.PlayerUpdate(Instance.lastColor, player);
+                if(currentHair != null)
+                    currentHair.PlayerUpdate(Instance.lastColor, player);
             }
             else
                 player.OverrideHairColor = null;
@@ -221,8 +222,9 @@ namespace Celeste.Mod.Hyperline
             
             Player player = self.Entity as Player;
 
-            if (player.Dashes >= MAX_DASH_COUNT || player.Dashes < 0)
+            if (player.Dashes >= MAX_DASH_COUNT || player.Dashes < 0 || (!Settings.DoFeatherColor && player.StateMachine.State == 19))
                 return colorOrig;
+
             Color ReturnC = GetCurrentColor(colorOrig, ((Player)self.Entity).Dashes, index, self);
             if (index == 0)
             {

@@ -12,6 +12,7 @@ namespace Celeste.Mod.Hyperline
         private TextMenu.Option<bool> enabledText;
         private TextMenu.Option<bool> allowMapHairText;
         private TextMenu.Option<bool> maddyCrownText;
+        private TextMenu.Option<bool> doFeatherColorText;
 
         private List<List<List<TextMenu.Item>>> colorMenus; //format is  [Dashes][Type][ColorNum]
         private TextMenuExt.OptionSubMenu dashCountMenu;
@@ -103,9 +104,11 @@ namespace Celeste.Mod.Hyperline
             enabledText = new TextMenu.OnOff(Dialog.Clean("MODOPTIONS_HYPERLINE_ENABLED"), Settings.Enabled).Change(EnabledToggled);
             allowMapHairText = new TextMenu.OnOff(Dialog.Clean("MODOPTIONS_HYPERLINE_ALLOWMAPHAIR"), Settings.AllowMapHairColors).Change(v => Settings.AllowMapHairColors = v);
             maddyCrownText = new TextMenu.OnOff("Maddy Crown Support:", Settings.DoMaddyCrown).Change(v => { Settings.DoMaddyCrown = v; });
+            doFeatherColorText = new TextMenu.OnOff("Do Feather Color", Settings.DoFeatherColor).Change(v => { Settings.DoFeatherColor = v;  });
             menu.Add(enabledText);
             menu.Add(allowMapHairText);
             menu.Add(maddyCrownText);
+            menu.Add(doFeatherColorText);
             CreatePresetMenu(menu);
 
             colorMenus = new List<List<List<TextMenu.Item>>>();    //dashes
@@ -134,7 +137,7 @@ namespace Celeste.Mod.Hyperline
                 }
 
                 Menu.Add(new TextMenu.Slider("Speed:", StringFromInt, HyperlineSettings.MIN_HAIR_SPEED, HyperlineSettings.MAX_HAIR_SPEED, Settings.hairSpeedList[counterd]).Change(v => { SetHairSpeed(r, v); }));
-                Menu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MIN_HAIR_LENGTH, HyperlineSettings.MAX_HAIR_LENGTH, Settings.hairLengthList[counterd]).Change(v => { SetHairLength(r, v); }));
+                Menu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MIN_HAIR_LENGTH, Settings.HairLengthSoftCap, Settings.hairLengthList[counterd]).Change(v => { SetHairLength(r, v); }));
                 Menu.Add(HairTypeMenu);
                 if (!inGame)
                 {

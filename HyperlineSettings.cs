@@ -11,7 +11,7 @@ namespace Celeste.Mod.Hyperline
     public class HyperlineSettings : EverestModuleBinarySettings
     {
         public const int MIN_HAIR_LENGTH = 1;
-        public const int MAX_HAIR_LENGTH = 100;
+        public const int MAX_HAIR_LENGTH = 1000;
         public const int MIN_HAIR_SPEED = -40;
         public const int MAX_HAIR_SPEED = 40;
 
@@ -29,7 +29,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 2, 1 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 2, 2 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -121,6 +121,12 @@ namespace Celeste.Mod.Hyperline
 
         [SettingIgnore]
         public bool DoMaddyCrown { get; set; } = true;
+
+        [SettingIgnore]
+        public bool DoFeatherColor { get; set; } = true;
+
+        [SettingIgnore]
+        public int HairLengthSoftCap { get; set; } = 100;
 
         public void LoadTextures()
         {
@@ -263,6 +269,16 @@ namespace Celeste.Mod.Hyperline
                         if (doMaddyCrown != null)
                             DoMaddyCrown = (bool)doMaddyCrown;
 
+                        XElement hyperlineSoftCap = root.Element("hairLengthSoftCap");
+                        if (hyperlineSoftCap != null)
+                            HairLengthSoftCap = (int)hyperlineSoftCap;
+                        if (HairLengthSoftCap > MAX_HAIR_LENGTH)
+                            HairLengthSoftCap = MAX_HAIR_LENGTH;
+
+                        XElement doFeatherColor = root.Element("doFeatherColor");
+                        if (doFeatherColor != null)
+                            DoFeatherColor = (bool)doFeatherColor;
+
                         XElement dashesElement = root.Element("dashes");
                         if (dashesElement != null)
                         {
@@ -278,7 +294,7 @@ namespace Celeste.Mod.Hyperline
                                         if (hairLengthElement != null)
                                         {
                                             hairLengthList[dash] = (int)hairLengthElement;
-                                            if (hairLengthList[dash] > MAX_HAIR_LENGTH || hairLengthList[dash] < MIN_HAIR_LENGTH)
+                                            if (hairLengthList[dash] > HairLengthSoftCap || hairLengthList[dash] < MIN_HAIR_LENGTH)
                                                 hairLengthList[dash] = 4;
                                         }
                                         else
@@ -358,7 +374,7 @@ namespace Celeste.Mod.Hyperline
             XDocument document = new XDocument();
             XElement root = new XElement("root");
             root.Add(new XElement("enabled", Enabled), new XElement("allowMapHairColor", AllowMapHairColors),
-                         new XElement("doMaddyCrown", DoMaddyCrown));
+                         new XElement("doMaddyCrown", DoMaddyCrown), new XElement("doFeatherColor", DoFeatherColor), new XElement("hairLengthSoftCap", HairLengthSoftCap));
 
             XElement dashesElement = new XElement("dashes");
             for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)

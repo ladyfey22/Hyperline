@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Celeste.Mod.Hyperline
@@ -13,6 +14,20 @@ namespace Celeste.Mod.Hyperline
     /// </remarks>
     public abstract class IHairType
     {
+        private static FieldInfo hairflashtimerField = typeof(Player).GetField("hairFlashTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static float GetHairFlashTimer(Player player)
+        {
+            float flashTimer = 0.0f;
+            if (hairflashtimerField != null)
+            {
+                object obj = hairflashtimerField.GetValue(player);
+                if (obj != null)
+                    flashTimer = (float)obj;
+            }
+            return flashTimer;
+        }
+
         /// <summary>
         /// Function to get the display name of a hair type.
         /// </summary>
@@ -133,14 +148,18 @@ namespace Celeste.Mod.Hyperline
         public virtual void AfterUpdate(On.Celeste.PlayerHair.orig_AfterUpdate orig, PlayerHair self)
         {
             Player player = self.EntityAs<Player>();
-            player.Hair.Color = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
+            if (!(!Hyperline.Settings.DoFeatherColor && player.StateMachine.State == 19))
+                player.Hair.Color = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
             orig(self);
         }
 
         public virtual void PlayerUpdate(Color lastColor, Player player)
         {
+            if (player != null)
+            {
                 player.OverrideHairColor = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
                 Hyperline.Instance.maddyCrownSprite = null;
+            }
         }
     }
 }
