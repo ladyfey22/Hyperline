@@ -29,7 +29,7 @@ namespace Celeste.Mod.Hyperline
 
         public readonly byte[] oldHeader = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
         public readonly byte[] newHeader = new byte[] { 0xBE, 0xEF, 0xDE, 0xAD };
-        public readonly byte[] version = new byte[] { 0, 2, 2 }; //MAJOR,MINOR,SUB
+        public readonly byte[] version = new byte[] { 0, 2, 3 }; //MAJOR,MINOR,SUB
 
         public HyperlineSettings()
         {
@@ -127,6 +127,9 @@ namespace Celeste.Mod.Hyperline
 
         [SettingIgnore]
         public int HairLengthSoftCap { get; set; } = 100;
+
+        [SettingIgnore]
+        public bool DoDashFlash { get; set; } = true;
 
         public void LoadTextures()
         {
@@ -262,6 +265,10 @@ namespace Celeste.Mod.Hyperline
                         XElement enabledElement = root.Element("enabled");
                         if (enabledElement != null)
                             Enabled = (bool)enabledElement;
+                        XElement doDashFlashElement = root.Element("doDashFlash");
+                        if (doDashFlashElement != null)
+                            DoDashFlash = (bool)doDashFlashElement;
+
                         XElement allowMapColors = root.Element("allowMapColors");
                         if (allowMapColors != null)
                             AllowMapHairColors = (bool)allowMapColors;
@@ -374,7 +381,8 @@ namespace Celeste.Mod.Hyperline
             XDocument document = new XDocument();
             XElement root = new XElement("root");
             root.Add(new XElement("enabled", Enabled), new XElement("allowMapHairColor", AllowMapHairColors),
-                         new XElement("doMaddyCrown", DoMaddyCrown), new XElement("doFeatherColor", DoFeatherColor), new XElement("hairLengthSoftCap", HairLengthSoftCap));
+                         new XElement("doMaddyCrown", DoMaddyCrown), new XElement("doFeatherColor", DoFeatherColor), 
+                         new XElement("hairLengthSoftCap", HairLengthSoftCap), new XElement("doDashFlash", DoDashFlash));
 
             XElement dashesElement = new XElement("dashes");
             for (int i = 0; i < Hyperline.MAX_DASH_COUNT; i++)

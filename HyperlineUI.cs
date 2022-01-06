@@ -13,6 +13,7 @@ namespace Celeste.Mod.Hyperline
         private TextMenu.Option<bool> allowMapHairText;
         private TextMenu.Option<bool> maddyCrownText;
         private TextMenu.Option<bool> doFeatherColorText;
+        private TextMenu.Option<bool> doDashFlashText;
 
         private List<List<List<TextMenu.Item>>> colorMenus; //format is  [Dashes][Type][ColorNum]
         private TextMenuExt.OptionSubMenu dashCountMenu;
@@ -37,6 +38,8 @@ namespace Celeste.Mod.Hyperline
             allowMapHairText.Visible = enabled;
             dashCountMenu.Visible = enabled;
             maddyCrownText.Visible = enabled;
+            doFeatherColorText.Visible = enabled;
+            doDashFlashText.Visible = enabled;
         }
 
         public void UpdateHairType(int dashCount, uint type)
@@ -105,10 +108,12 @@ namespace Celeste.Mod.Hyperline
             allowMapHairText = new TextMenu.OnOff(Dialog.Clean("MODOPTIONS_HYPERLINE_ALLOWMAPHAIR"), Settings.AllowMapHairColors).Change(v => Settings.AllowMapHairColors = v);
             maddyCrownText = new TextMenu.OnOff("Maddy Crown Support:", Settings.DoMaddyCrown).Change(v => { Settings.DoMaddyCrown = v; });
             doFeatherColorText = new TextMenu.OnOff("Do Feather Color", Settings.DoFeatherColor).Change(v => { Settings.DoFeatherColor = v;  });
+            doDashFlashText = new TextMenu.OnOff("Do Dash Flash", Settings.DoDashFlash).Change(v => { Settings.DoDashFlash = v; });
             menu.Add(enabledText);
             menu.Add(allowMapHairText);
             menu.Add(maddyCrownText);
             menu.Add(doFeatherColorText);
+            menu.Add(doDashFlashText);
             CreatePresetMenu(menu);
 
             colorMenus = new List<List<List<TextMenu.Item>>>();    //dashes

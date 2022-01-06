@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Monocle;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -26,6 +27,19 @@ namespace Celeste.Mod.Hyperline
                     flashTimer = (float)obj;
             }
             return flashTimer;
+        }
+
+        private static int lastDashes;
+        private static float hairFlashTimer;
+
+        public static bool IsFlash()
+        {
+            return hairFlashTimer > 0;
+        }
+
+        public static Color LerpFlash(Color c)
+        {
+            return Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin((double)(hairFlashTimer / 0.12f * MathHelper.Pi)));
         }
 
         /// <summary>
@@ -160,6 +174,16 @@ namespace Celeste.Mod.Hyperline
                 player.OverrideHairColor = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
                 Hyperline.Instance.maddyCrownSprite = null;
             }
+        }
+
+        public virtual void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
+        {
+            if (lastDashes != self.Dashes)
+                hairFlashTimer = 0.12f;
+            if (hairFlashTimer > 0f)
+                hairFlashTimer -= Engine.DeltaTime;
+            lastDashes = self.Dashes;
+            orig(self, applyGravity);
         }
     }
 }

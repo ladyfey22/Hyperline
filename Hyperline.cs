@@ -85,9 +85,6 @@ namespace Celeste.Mod.Hyperline
                 maddyCrownSprite.SetColor(lastColor);
         }
 
-        public static void OnLevelEntry(Session session, bool fromSaveData)
-        {
-        }
 
         public override void LoadContent(bool firstLoad)
         {
@@ -114,6 +111,7 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Player.Added -= PlayerAdded;
             On.Celeste.Level.EndPauseEffects -= OnUnpause;
             On.Celeste.PlayerHair.Render -= RenderHair;
+            On.Celeste.Player.UpdateHair -= UpdateHair;
             TriggerManager.Unload();
             isHooked = false;
         }
@@ -130,8 +128,25 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Player.Added += PlayerAdded;
             On.Celeste.Level.EndPauseEffects += OnUnpause;
             On.Celeste.PlayerHair.Render += RenderHair;
+            On.Celeste.Player.UpdateHair += UpdateHair;
             TriggerManager.Load();
             isHooked = true;
+        }
+
+        private void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
+        {
+            if(!Settings.Enabled || self.Dashes > MAX_DASH_COUNT)
+            {
+                orig(self, applyGravity);
+                return;
+            }
+
+            IHairType hair = Instance.triggerManager.GetHair(self.Dashes);
+            if (hair != null)
+                hair.UpdateHair(orig, self, applyGravity);
+            else
+                orig(self, applyGravity);
+
         }
 
         public void RenderHair(On.Celeste.PlayerHair.orig_Render orig, PlayerHair self)
@@ -232,6 +247,10 @@ namespace Celeste.Mod.Hyperline
                 Instance.lastColor = ReturnC;
                 Instance.lastHairLength = Instance.triggerManager.GetHairLength(((Player)self.Entity).Dashes);
             }
+
+            if (IHairType.IsFlash() && Settings.DoDashFlash)
+                return Player.FlashHairColor;
+
             return ReturnC;
         }
 
@@ -271,7 +290,13 @@ namespace Celeste.Mod.Hyperline
             Instance.UpdateHairLength(self);
 
             IHairType hair = Instance.triggerManager.GetHair(player.Dashes);
-            hair.AfterUpdate(orig, self);
+            if (hair != null)
+                hair.AfterUpdate(orig, self);
+            else
+            {
+                orig(self); //this really shouldn't happen, only happens when using the load command from the main menu, so we'll reload the trigger manager
+                triggerManager.LoadFromSettings();
+            }
         }
 
         public override void Initialize()
