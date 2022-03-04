@@ -31,6 +31,14 @@ namespace Celeste.Mod.Hyperline
         private bool isHooked = false;
         public Sprite maddyCrownSprite;
 
+        // vanilla particle definitions
+        public static ParticleType DefaultPDashA;
+        public static ParticleType DefaultPDashB;
+        public static ParticleType DefaultPDashBadB;
+
+        public ParticleType PlayerParticle;
+        bool shouldClearOverride = false;
+
         public Hyperline()
         {
             UI = new HyperlineUI();
@@ -47,6 +55,34 @@ namespace Celeste.Mod.Hyperline
             AddHairType(new SolidHair());
             AddHairType(new RainbowHair());
             AddHairType(new DefaultHair());
+
+            DefaultPDashA = new ParticleType {
+                Color = Calc.HexToColor("44B7FF"),
+                Color2 = Calc.HexToColor("75c9ff"),
+                ColorMode = ParticleType.ColorModes.Blink,
+                FadeMode = ParticleType.FadeModes.Late,
+                LifeMin = 1f,
+                LifeMax = 1.8f,
+                Size = 1f,
+                SpeedMin = 10f,
+                SpeedMax = 20f,
+                Acceleration = new Vector2(0f, 8f),
+                DirectionRange = 1.0471976f
+            };
+
+            DefaultPDashB = new ParticleType(DefaultPDashA) {
+                Color = Calc.HexToColor("AC3232"),
+                Color2 = Calc.HexToColor("e05959")
+            };
+
+            DefaultPDashBadB = new ParticleType(DefaultPDashA) {
+                Color = Calc.HexToColor("9B3FB5"),
+                Color2 = Calc.HexToColor("CC8EE2")
+            };
+
+            PlayerParticle = new ParticleType(DefaultPDashA) {
+            };
+
         }
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
@@ -112,6 +148,9 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Level.EndPauseEffects -= OnUnpause;
             On.Celeste.PlayerHair.Render -= RenderHair;
             On.Celeste.Player.UpdateHair -= UpdateHair;
+            On.Celeste.Player.DashUpdate -= DashUpdate;
+            shouldClearOverride = true;
+
             TriggerManager.Unload();
             isHooked = false;
         }
@@ -129,8 +168,32 @@ namespace Celeste.Mod.Hyperline
             On.Celeste.Level.EndPauseEffects += OnUnpause;
             On.Celeste.PlayerHair.Render += RenderHair;
             On.Celeste.Player.UpdateHair += UpdateHair;
+            On.Celeste.Player.DashUpdate += DashUpdate;
             TriggerManager.Load();
             isHooked = true;
+        }
+
+        private int DashUpdate(On.Celeste.Player.orig_DashUpdate orig, Player self)
+        {
+            if (Settings.Enabled)
+            {
+                PlayerParticle.Color = lastColor;
+                PlayerParticle.Color2 = lastColor;
+
+                Player.P_DashA = PlayerParticle;
+                Player.P_DashB = PlayerParticle;
+                Player.P_DashBadB = PlayerParticle;
+            }
+            int returnV = orig(self);
+
+            if (Settings.Enabled)
+            {
+                Player.P_DashA = DefaultPDashA;
+                Player.P_DashB = DefaultPDashB;
+                Player.P_DashBadB = DefaultPDashB;
+            }
+
+            return returnV;
         }
 
         private void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
@@ -192,15 +255,24 @@ namespace Celeste.Mod.Hyperline
 
         public static void PlayerUpdate(On.Celeste.Player.orig_Update orig, Player player)
         {
-            if(Settings.Enabled && !(!Settings.DoFeatherColor && player.StateMachine.State == 19))
+            if (Settings.Enabled)
             {
-                Instance.maddyCrownSprite = null;
-                IHairType currentHair = Instance.triggerManager.GetHair(player.Dashes);
-                if(currentHair != null)
-                    currentHair.PlayerUpdate(Instance.lastColor, player);
+                if (!(!Settings.DoFeatherColor && player.StateMachine.State == 19))
+                {
+                    Instance.maddyCrownSprite = null;
+                    IHairType currentHair = Instance.triggerManager.GetHair(player.Dashes);
+                    if (currentHair != null)
+                        currentHair.PlayerUpdate(Instance.lastColor, player);
+                }
+                else
+                    player.OverrideHairColor = null;
             }
-            else
+            
+            if(Instance.shouldClearOverride)
+            {
+                Instance.shouldClearOverride = false;
                 player.OverrideHairColor = null;
+            }
             orig(player);
         }
 
