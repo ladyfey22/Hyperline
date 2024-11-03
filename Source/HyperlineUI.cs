@@ -2,6 +2,7 @@
 {
     using global::Celeste.Mod.UI;
     using System.Collections.Generic;
+    using System.Linq;
 
     public class HyperlineUI
     {
@@ -89,19 +90,16 @@
                     i++;
                 }
 
-                TextMenuExt.EnumerableSlider<uint> slider = new("Preset:", presetList, 0);
-                slider.Change(v => currentPreset = (int)v);
-                menu.Add(slider);
-
-                TextMenu.Button applyButton = new("Apply Preset");
-                applyButton.Pressed(CopyPreset);
-                menu.Add(applyButton);
+                menu.Add(new TextMenuExt.EnumerableSlider<uint>("Preset:", presetList, 0).Change(v => currentPreset = (int)v));
+                menu.Add(new TextMenu.Button("Apply Preset").Pressed(CopyPreset));
             }
         }
 
         public static void SetHairLength(int dashCount, int hairLength) => Hyperline.Settings.DashList[dashCount].HairLength = hairLength;
 
         public static void SetHairSpeed(int dashCount, int hairSpeed) => Hyperline.Settings.DashList[dashCount].HairSpeed = hairSpeed;
+
+        public static void SetHairPhase(int dashCount, int hairPhase) => Hyperline.Settings.DashList[dashCount].HairPhase = hairPhase;
 
         public void CreateMenu(TextMenu menu, bool inGame)
         {
@@ -144,18 +142,18 @@
                 bangsButton.Disabled = !inGame;
 
                 dashMenu.Add(textureButton);
-                dashMenu.Add(textureButton);
+                dashMenu.Add(bangsButton);
 
                 dashMenu.Add(new TextMenu.Slider("Speed:", StringFromInt, HyperlineSettings.MinHairSpeed, HyperlineSettings.MaxHairSpeed, Hyperline.Settings.DashList[counterd].HairSpeed).Change(v => SetHairSpeed(r, v)));
                 dashMenu.Add(new TextMenu.Slider("Length:", StringFromInt, HyperlineSettings.MinHairLength, Hyperline.Settings.HairLengthSoftCap, Hyperline.Settings.DashList[counterd].HairLength).Change(v => SetHairLength(r, v)));
+                dashMenu.Add(new TextMenu.Slider("Phase: ", StringFromInt, HyperlineSettings.MinHairPhase, HyperlineSettings.MaxHairPhase, Hyperline.Settings.DashList[counterd].HairPhase).Change(v => SetHairPhase(r, v)));
                 dashMenu.Add(hairTypeMenu);
+
                 for (int i = 0; i < colorMenus[counterd].Count; i++)
                 {
-                    for (int j = 0; j < colorMenus[counterd][i].Count; j++)
-                    {
-                        dashMenu.Add(colorMenus[counterd][i][j]);
-                    }
+                    dashMenu.AddRange(colorMenus[counterd][i].AsEnumerable());
                 }
+
                 dashCountMenu.Add(counterd.ToString(), dashMenu);
             }
             menu.Add(dashCountMenu);

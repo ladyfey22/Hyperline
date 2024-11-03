@@ -13,6 +13,8 @@
         public const int MaxHairLength = 1000;
         public const int MinHairSpeed = -40;
         public const int MaxHairSpeed = 40;
+        public const int MinHairPhase = 0;
+        public const int MaxHairPhase = 100;
 
         public byte[] Version { get; private set; } = [0, 3, 0];  //MAJOR,MINOR,SUB
 

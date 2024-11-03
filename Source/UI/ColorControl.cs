@@ -157,6 +157,12 @@ namespace Celeste.Mod.Hyperline.UI
                 // draw the selectors
                 selector.DrawCentered(hueSelectorPosition, Color.Black, 2);
                 selector.DrawCentered(satValueSelectorPosition, Color.Black, 2);
+
+                // draw a tooltip for holding C to go fast if a menu is currently selected
+                if (menuState is MenuState.ValueSatSelected or MenuState.HueSelected)
+                {
+                    ButtonUI.Render(valuePosition + (Vector2.UnitX * (renderTarget.Width + (ButtonUI.Width("Hold for fast adjustment", Input.MenuConfirm) * 0.5f))), "Hold for fast adjustment", Input.MenuConfirm, 0.5f);
+                }
             }
             spriteBatch.End();
         }

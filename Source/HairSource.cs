@@ -1,6 +1,7 @@
 namespace Celeste.Mod.Hyperline
 {
     using System.Collections.Generic;
+    using Monocle;
 
     /// <summary>
     /// Represents a source of hyperline hair info.
@@ -29,6 +30,24 @@ namespace Celeste.Mod.Hyperline
         {
             HyperlineSettings.DashSettings hairSettings = GetDash(dashes);
             return hairSettings != null ? hairSettings.HairSpeed : 0;
+        }
+
+        public virtual int GetHairPhase(int dashes)
+        {
+            HyperlineSettings.DashSettings hairSettings = GetDash(dashes);
+            return hairSettings != null ? hairSettings.HairPhase : 0;
+        }
+
+        public virtual List<MTexture> GetHairTextures(int dashes)
+        {
+            HyperlineSettings.DashSettings hairSettings = GetDash(dashes);
+            return hairSettings?.HairTextures;
+        }
+
+        public virtual List<MTexture> GetBangsTextures(int dashes)
+        {
+            HyperlineSettings.DashSettings hairSettings = GetDash(dashes);
+            return hairSettings?.HairBangs;
         }
     }
 

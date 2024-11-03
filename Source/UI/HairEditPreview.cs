@@ -30,6 +30,7 @@ namespace Celeste.Mod.Hyperline.UI
         private int GetHairCount() => Hyperline.Settings.DashList[dashes].HairLength;
 
         private float GetHairSpeed() => Hyperline.Settings.DashList[dashes].HairSpeed;
+        private int GetHairPhase() => Hyperline.Settings.DashList[dashes].HairPhase;
 
         private IHairType GetHair() => Hyperline.Settings.DashList[dashes].HairList[Hyperline.Settings.DashList[dashes].HairType];
 
@@ -47,7 +48,7 @@ namespace Celeste.Mod.Hyperline.UI
         {
             for (int i = 0; i < GetHairCount(); i++)
             {
-                float phaseShift = Math.Abs(i / ((float)GetHairCount()));
+                float phaseShift = Math.Abs((i + GetHairPhase()) / ((float)GetHairCount()));
                 float phase = phaseShift + (GetHairSpeed() / 20.0f * time);
                 phase -= (float)Math.Floor(phase);
 

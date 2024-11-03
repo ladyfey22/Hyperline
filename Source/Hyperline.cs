@@ -5,7 +5,6 @@
     using Monocle;
     using MonoMod.ModInterop;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
 
     public class Hyperline : EverestModule
@@ -240,19 +239,22 @@
 
             if (index == 0)  //bangs
             {
-                if (Settings.DashList[player.Dashes].HairBangs == null || Settings.DashList[player.Dashes].HairBangs.Count == 0)
+                List<MTexture> hairBangs = Instance.HairSource.GetBangsTextures(player.Dashes);
+                if (hairBangs == null || hairBangs.Count == 0)
                 {
                     return orig(self, index);
                 }
 
-                return Settings.DashList[player.Dashes].HairBangs[self.Sprite.HairFrame % Settings.DashList[player.Dashes].HairBangs.Count];
+                return hairBangs[self.Sprite.HairFrame % hairBangs.Count];
             }
-            if (Settings.DashList[player.Dashes].HairTextures == null || Settings.DashList[player.Dashes].HairTextures.Count == 0)
+
+            List<MTexture> hairTextures = Instance.HairSource.GetHairTextures(player.Dashes);
+            if (hairTextures == null || hairTextures.Count == 0)
             {
                 return orig(self, index);
             }
 
-            return Settings.DashList[player.Dashes].HairTextures[index % Settings.DashList[player.Dashes].HairTextures.Count];
+            return hairTextures[index % hairTextures.Count];
         }
 
         public static void PlayerAdded(On.Celeste.Player.orig_Added orig, Player self, Scene scene)
@@ -355,9 +357,10 @@
 
             int speed = Instance.HairSource.GetHairSpeed(dashes);
             int length = Instance.HairSource.GetHairLength(dashes);
-            float phaseShift = Math.Abs(index / ((float)length));
+            int hairPhase = Instance.HairSource.GetHairPhase(dashes);
+            float phaseShift = Math.Abs((index + hairPhase) / ((float)length));
             float phase = phaseShift + (speed / 20.0f * Instance.time);
-            phase -= (float)Math.Floor(phase);
+            phase -= (float)Math.Floor(phase); // phase needs to be between [0 - 1]
             Color returnV = new(0, 0, 0);
 
             IHairType hair = Instance.HairSource.GetHair(dashes);
