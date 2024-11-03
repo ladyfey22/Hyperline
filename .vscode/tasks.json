@@ -1,0 +1,23 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "buildShader",
+            "type": "shell",
+            "command": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64/fxc.exe",
+            "args": ["/Od", "/Zi", "/T", "fx_2_0", "/Fo", "Effects/HSVEffect.cso", "Effects/HSVEffect.fx"]
+        },
+        {
+            "label":"build",
+            "command":"dotnet",
+            "type":"process",
+            "args": [ "build", "./Hyperline.sln"],
+            "problemMatcher" : "$msCompile",
+            "dependsOn" :[
+                "buildShader"
+            ]
+        }
+    ]
+  }

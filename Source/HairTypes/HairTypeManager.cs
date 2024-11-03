@@ -1,25 +1,30 @@
-﻿using System.Collections.Generic;
-
-namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline
 {
+    using System.Collections.Generic;
+
     public class HairTypeManager
     {
         public HairTypeManager()
         {
-            hairTypes = new Dictionary<uint, IHairType>();
+            hairTypes = [];
         }
 
         public void AddHairType(IHairType hair)
         {
             uint id = hair.GetHash();
             if (!hairTypes.ContainsKey(id))
+            {
                 hairTypes[id] = hair;
+            }
         }
 
         public IHairType CreateNewHairType(uint id)
         {
-            if (hairTypes.ContainsKey(id))
-                return hairTypes[id].CreateNew();
+            if (hairTypes.TryGetValue(id, out IHairType value))
+            {
+                return value.CreateNew();
+            }
+
             return null;
         }
 
@@ -41,33 +46,29 @@ namespace Celeste.Mod.Hyperline
             return hairTypeList;
         }
 
-        public int GetHairTypeCount()
-        {
-            return hairTypes.Count;
-        }
+        public int GetHairTypeCount() => hairTypes.Count;
 
-        public Dictionary<uint, IHairType> CopyHairDict()
-        {
-            return new Dictionary<uint, IHairType>(hairTypes);
-        }
-
+        public Dictionary<uint, IHairType> CopyHairDict() => new(hairTypes);
         public Dictionary<uint, IHairType> CopyHairDict(int dashCount)
         {
-            Dictionary<uint, IHairType> returnV = new Dictionary<uint, IHairType>();
+            Dictionary<uint, IHairType> returnV = [];
             foreach (KeyValuePair<uint, IHairType> hair in hairTypes)
+            {
                 returnV[hair.Key] = hair.Value.CreateNew(dashCount);
+            }
+
             return returnV;
         }
 
-        public IHairType GetType(string str)
-        {
-            return GetType(Hashing.FNV1Hash(str));
-        }
+        public IHairType GetType(string str) => GetType(Hashing.FNV1Hash(str));
 
         public IHairType GetType(uint id)
         {
-            if (hairTypes.ContainsKey(id))
-                return hairTypes[id];
+            if (hairTypes.TryGetValue(id, out IHairType value))
+            {
+                return value;
+            }
+
             return null;
         }
 
@@ -89,17 +90,17 @@ namespace Celeste.Mod.Hyperline
             foreach (KeyValuePair<uint, IHairType> hair in hairTypes)
             {
                 if (hair.Value.GetHash() == hash)
+                {
                     return i;
+                }
+
                 i++;
             }
             return -1;
         }
 
-        public bool Has(uint i)
-        {
-            return hairTypes.ContainsKey(i);
-        }
+        public bool Has(uint i) => hairTypes.ContainsKey(i);
 
-        private Dictionary<uint, IHairType> hairTypes;
+        private readonly Dictionary<uint, IHairType> hairTypes;
     }
 }

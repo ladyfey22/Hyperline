@@ -1,12 +1,12 @@
-﻿using Microsoft.Xna.Framework;
-using Monocle;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Xml.Linq;
-
-namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline
 {
+    using Microsoft.Xna.Framework;
+    using Monocle;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Reflection;
+    using System.Xml.Linq;
+
     /// <summary>
     /// Interface for all hair types.
     /// </summary>
@@ -15,16 +15,27 @@ namespace Celeste.Mod.Hyperline
     /// </remarks>
     public abstract class IHairType
     {
-        private static FieldInfo hairflashtimerField = typeof(Player).GetField("hairFlashTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo HairflashtimerField = typeof(Player).GetField("hairFlashTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static void ReadColorElement(XElement element, string name, ref HSVColor color)
+        {
+            XElement colorElement = element.Element(name);
+            if (colorElement != null)
+            {
+                color.FromString((string)colorElement);
+            }
+        }
 
         public static float GetHairFlashTimer(Player player)
         {
             float flashTimer = 0.0f;
-            if (hairflashtimerField != null)
+            if (HairflashtimerField != null)
             {
-                object obj = hairflashtimerField.GetValue(player);
+                object obj = HairflashtimerField.GetValue(player);
                 if (obj != null)
+                {
                     flashTimer = (float)obj;
+                }
             }
             return flashTimer;
         }
@@ -32,15 +43,9 @@ namespace Celeste.Mod.Hyperline
         private static int lastDashes;
         private static float hairFlashTimer;
 
-        public static bool IsFlash()
-        {
-            return hairFlashTimer > 0;
-        }
+        public static bool IsFlash() => hairFlashTimer > 0;
 
-        public static Color LerpFlash(Color c)
-        {
-            return Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin((double)(hairFlashTimer / 0.12f * MathHelper.Pi)));
-        }
+        public static Color LerpFlash(Color c) => Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin((double)(hairFlashTimer / 0.12f * MathHelper.Pi)));
 
         /// <summary>
         /// Function to get the display name of a hair type.
@@ -48,6 +53,10 @@ namespace Celeste.Mod.Hyperline
         /// <returns> Dialog key to the display name of this hair type. </returns>
         public abstract string GetHairName();
 
+        /// <summary>
+        /// Create a new copy of the IHairType with the same values.
+        /// </summary>
+        /// <returns>A clone of the IHairType.</returns>
         public abstract IHairType Clone();
 
         /// <summary>
@@ -82,7 +91,7 @@ namespace Celeste.Mod.Hyperline
         public abstract Color GetColor(Color colorOrig, float phase);
 
         /// <summary>
-        /// Reads the hair type from a stream.
+        /// Reads the hair type from a stream. This is for legacy support, and is not required.
         /// </summary>
         /// <param name="reader"> The stream to read from. </param>
         /// <param name="version"> The version array (size 3), form {Major,Minor,Sub} </param>
@@ -91,7 +100,7 @@ namespace Celeste.Mod.Hyperline
         public abstract void Read(XElement element);
 
         /// <summary>
-        /// Writes the hair type to a stream.
+        /// Writes the hair type to a stream. This is for legacy support, and is not required.
         /// </summary>
         /// <param name="writer"> The stream to write to. </param>
         public abstract void Write(BinaryWriter writer);
@@ -146,10 +155,7 @@ namespace Celeste.Mod.Hyperline
         /// It is reccomended to look at the default hair rendering code before writing this.
         /// To keep compatability, use the hair color and texture functions in the PlayerHair class.
         /// </remarks>
-        public virtual void Render(On.Celeste.PlayerHair.orig_Render orig, PlayerHair self)
-        {
-            orig(self);
-        }
+        public virtual void Render(On.Celeste.PlayerHair.orig_Render orig, PlayerHair self) => orig(self);
 
         /// <summary>
         /// Updates the hair, allowing for custom physics.
@@ -163,7 +169,10 @@ namespace Celeste.Mod.Hyperline
         {
             Player player = self.EntityAs<Player>();
             if (!(!Hyperline.Settings.DoFeatherColor && player.StateMachine.State == 19))
-                player.Hair.Color = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
+            {
+                player.Hair.Color = Hyperline.GetCurrentColor(Hyperline.Instance.LastColor, player.Dashes, 0);
+            }
+
             orig(self);
         }
 
@@ -171,17 +180,23 @@ namespace Celeste.Mod.Hyperline
         {
             if (player != null)
             {
-                player.OverrideHairColor = Hyperline.GetCurrentColor(Hyperline.Instance.lastColor, player.Dashes, 0, player.Hair);
-                Hyperline.Instance.maddyCrownSprite = null;
+                player.OverrideHairColor = Hyperline.GetCurrentColor(Hyperline.Instance.LastColor, player.Dashes, 0);
+                Hyperline.Instance.MaddyCrownSprite = null;
             }
         }
 
         public virtual void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
         {
             if (lastDashes != self.Dashes)
+            {
                 hairFlashTimer = 0.12f;
+            }
+
             if (hairFlashTimer > 0f)
+            {
                 hairFlashTimer -= Engine.DeltaTime;
+            }
+
             lastDashes = self.Dashes;
             orig(self, applyGravity);
         }
