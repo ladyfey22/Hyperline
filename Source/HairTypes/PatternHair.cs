@@ -17,7 +17,7 @@
             colorList = new HSVColor[MaxPatternCount];
             for (int i = 0; i < colorList.Length; i++)
             {
-                colorList[i] = new HSVColor();
+                colorList[i] = new();
             }
 
             patternCount = 0;
@@ -64,7 +64,7 @@
             for (int i = 0; i < MaxPatternCount; i++)
             {
                 int counter = i;
-                colorMenus.Add(new UI.ColorSubmenu(menu, "Color " + (i + 1), colorList[counter], inGame).Change(v => colorList[counter] = new HSVColor(v)));
+                colorMenus.Add(new UI.ColorSubmenu(menu, "Color " + (i + 1), colorList[counter], inGame).Change(v => colorList[counter] = new(v)));
 
             }
             return colorMenus;
@@ -87,7 +87,7 @@
             returnV.patternCount = int.Parse(tokens[0]);
             for (int i = 0; i < returnV.patternCount && i < returnV.colorList.Length && i + 1 < tokens.Length; i++)
             {
-                returnV.colorList[i] = new HSVColor(tokens[i + 1]);
+                returnV.colorList[i] = new(tokens[i + 1]);
             }
 
             return returnV;
@@ -115,10 +115,10 @@
         public override void Write(XElement element)
         {
             XElement[] elements = new XElement[colorList.Length + 1];
-            elements[0] = new XElement("patternCount", patternCount);
+            elements[0] = new("patternCount", patternCount);
             for (int i = 0; i < colorList.Length; i++)
             {
-                elements[i + 1] = new XElement("color", colorList[i].ToHSVString());
+                elements[i + 1] = new("color", colorList[i].ToHSVString());
             }
 
             element.Add(elements);

@@ -45,7 +45,7 @@
 
         public static bool IsFlash() => hairFlashTimer > 0;
 
-        public static Color LerpFlash(Color c) => Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin((double)(hairFlashTimer / 0.12f * MathHelper.Pi)));
+        public static Color LerpFlash(Color c) => Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin(hairFlashTimer / 0.12f * MathHelper.Pi));
 
         /// <summary>
         /// Function to get the display name of a hair type.

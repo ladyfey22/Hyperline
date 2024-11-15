@@ -13,7 +13,7 @@
         public const uint MaxDashCount = 10;
         public static Hyperline Instance { get; private set; }
 
-        //Everest Type Defenitions
+        //Everest Type Definitions
         public override Type SettingsType => typeof(HyperlineSettings);
         public static HyperlineSettings Settings => (HyperlineSettings)Instance._Settings;
         public override Type SessionType => typeof(HyperlineSession);
@@ -26,7 +26,7 @@
         // Manager Classes
         public static PresetManager PresetManager { get; private set; }
         public static HairTypeManager HairTypes { get; private set; }
-        public static HyperlineUI UI { get; private set; }
+        public static HyperlineUI Ui { get; private set; }
         public static TriggerManager TriggerManager { get; set; }
 
         public Color LastColor { get; set; }
@@ -45,7 +45,7 @@
 
         public Hyperline()
         {
-            UI = new();
+            Ui = new();
             PresetManager = new();
             TriggerManager = new();
 
@@ -58,10 +58,10 @@
             AddHairType([new GradientHair(), new PatternHair(), new SolidHair(), new RainbowHair(), new DefaultHair()]);
 
 
-            HairSource = new SettingsHairSource();
+            HairSource = new HairSourceList([new TriggerHairSource(), new SettingsHairSource()]);
 
             // create the default particles
-            defaultPDashA = new ParticleType
+            defaultPDashA = new()
             {
                 Color = Calc.HexToColor("44B7FF"),
                 Color2 = Calc.HexToColor("75c9ff"),
@@ -72,27 +72,24 @@
                 Size = 1f,
                 SpeedMin = 10f,
                 SpeedMax = 20f,
-                Acceleration = new Vector2(0f, 8f),
+                Acceleration = new(0f, 8f),
                 DirectionRange = 1.0471976f
             };
 
-            defaultPDashB = new ParticleType(defaultPDashA)
+            defaultPDashB = new(defaultPDashA)
             {
                 Color = Calc.HexToColor("AC3232"),
                 Color2 = Calc.HexToColor("e05959")
             };
 
-            playerParticle = new ParticleType(defaultPDashA)
-            {
-            };
-
+            playerParticle = new(defaultPDashA);
         }
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
         {
             // use our own custom menu system due to the hair type system
             base.CreateModMenuSection(menu, inGame, snapshot);
-            UI.CreateMenu(menu, inGame);
+            Ui.CreateMenu(menu, inGame);
         }
 
         public static void AddHairType(IHairType type) => HairTypes.AddHairType(type);
@@ -119,6 +116,7 @@
             On.Celeste.Player.UpdateHair += UpdateHair;
             On.Celeste.Player.DashUpdate += DashUpdate;
             On.Celeste.Player.Update += PlayerUpdate;
+            TriggerManager.Hook();;
         }
 
         public override void Unload()
@@ -133,6 +131,7 @@
             On.Celeste.Player.UpdateHair -= UpdateHair;
             On.Celeste.Player.DashUpdate -= DashUpdate;
             On.Celeste.Player.Update -= PlayerUpdate;
+            TriggerManager.Unhook();
         }
 
         private void UpdateMaddyCrown(Player player)
@@ -175,12 +174,14 @@
             }
             int returnV = orig(self);
 
-            if (Settings.Enabled)
+            if (!Settings.Enabled)
             {
-                Player.P_DashA = defaultPDashA;
-                Player.P_DashB = defaultPDashB;
-                Player.P_DashBadB = defaultPDashB;
+                return returnV;
             }
+
+            Player.P_DashA = defaultPDashA;
+            Player.P_DashB = defaultPDashB;
+            Player.P_DashBadB = defaultPDashB;
 
             return returnV;
         }
@@ -206,13 +207,12 @@
 
         public static void RenderHair(On.Celeste.PlayerHair.orig_Render orig, PlayerHair self)
         {
-            if (self.Entity is not Player || !Settings.Enabled || (self.Entity as Player).Dashes > MaxDashCount)
+            if (self.Entity is not Player player || !Settings.Enabled || player.Dashes > MaxDashCount)
             {
                 orig(self);
                 return;
             }
 
-            Player player = self.Entity as Player;
             IHairType hair = Instance.HairSource.GetHair(player.Dashes);
             if (hair != null)
             {
@@ -226,12 +226,11 @@
 
         public static MTexture GetHairTexture(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
         {
-            if (self.Entity is not Player || !Settings.Enabled)
+            if (self.Entity is not Player player || !Settings.Enabled)
             {
                 return orig(self, index);
             }
 
-            Player player = self.Entity as Player;
             if (player.Dashes is >= (int)MaxDashCount or < 0)
             {
                 return orig(self, index);
@@ -304,22 +303,23 @@
 
         public void UpdateHairLength(PlayerHair self)
         {
-            if (Settings.Enabled && self.Entity is Player)
+            if (!Settings.Enabled || self.Entity is not Player player)
             {
-                Player player = self.Entity as Player;
-                if (player.StateMachine.State == 5)
-                {
-                    player.Sprite.HairCount = 1;
-                }
-                else if (player.StateMachine.State != 19)
-                {
-                    player.Sprite.HairCount = (player.Dashes > 1) ? 5 : 4;
-                    player.Sprite.HairCount += lastHairLength - 4;
-                }
-                else if (player.StateMachine.State == 19)
-                {
-                    player.Sprite.HairCount = 7; // feather
-                }
+                return;
+            }
+
+            if (player.StateMachine.State == 5)
+            {
+                player.Sprite.HairCount = 1;
+            }
+            else if (player.StateMachine.State != 19)
+            {
+                player.Sprite.HairCount = player.Dashes > 1 ? 5 : 4;
+                player.Sprite.HairCount += lastHairLength - 4;
+            }
+            else if (player.StateMachine.State == 19)
+            {
+                player.Sprite.HairCount = 7; // feather
             }
         }
 
@@ -332,12 +332,12 @@
                 return colorOrig;
             }
 
-            Color returnC = GetCurrentColor(colorOrig, ((Player)self.Entity).Dashes, index);
+            Color returnC = GetCurrentColor(colorOrig, player.Dashes, index);
             if (index == 0)
             {
-                Instance.UpdateMaddyCrown(self.Entity as Player);
+                Instance.UpdateMaddyCrown(player);
                 Instance.LastColor = returnC; // set last color to the current bangs color
-                Instance.lastHairLength = Instance.HairSource.GetHairLength(((Player)self.Entity).Dashes);
+                Instance.lastHairLength = Instance.HairSource.GetHairLength(player.Dashes);
             }
 
             if (IHairType.IsFlash() && Settings.DoDashFlash)
@@ -358,7 +358,7 @@
             int speed = Instance.HairSource.GetHairSpeed(dashes);
             int length = Instance.HairSource.GetHairLength(dashes);
             int hairPhase = Instance.HairSource.GetHairPhase(dashes);
-            float phaseShift = Math.Abs((index + hairPhase) / ((float)length));
+            float phaseShift = Math.Abs((index + hairPhase) / (float)length);
             float phase = phaseShift + (speed / 20.0f * Instance.time);
             phase -= (float)Math.Floor(phase); // phase needs to be between [0 - 1]
             Color returnV = new(0, 0, 0);
@@ -374,13 +374,12 @@
 
         private static void PlayerHair_AfterUpdate(On.Celeste.PlayerHair.orig_AfterUpdate orig, PlayerHair self)
         {
-            if (self.Entity is not Player || !Settings.Enabled || (self.Entity as Player).Dashes > MaxDashCount)
+            if (self.Entity is not Player player || !Settings.Enabled || player.Dashes > MaxDashCount)
             {
                 orig(self);
                 return;
             }
 
-            Player player = (Player)self.Entity;
             Instance.time += Engine.DeltaTime;
             Instance.MaddyCrownSprite = null;
             Instance.UpdateHairLength(self);

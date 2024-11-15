@@ -20,11 +20,11 @@
 
             public void ResetSettings()
             {
-                DashList = new List<HyperlineSettings.DashSettings>((int)Hyperline.MaxDashCount);
+                DashList = new((int)Hyperline.MaxDashCount);
 
                 for (int i = 0; i < Hyperline.MaxDashCount; i++)
                 {
-                    DashList.Add(new HyperlineSettings.DashSettings(i));
+                    DashList.Add(new(i));
                 }
             }
 
@@ -56,7 +56,7 @@
                         }
                         else
                         {
-                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dashs element.");
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dashes element.");
                         }
                     }
                     else
@@ -66,7 +66,7 @@
                 }
                 catch (Exception exception)
                 {
-                    Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception.ToString());
+                    Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception);
                 }
             }
 
@@ -114,18 +114,21 @@
             {
                 foreach (ModAsset asset in content.List)
                 {
-                    if (Path.GetExtension(asset.PathVirtual).ToLowerInvariant() == ".preset" && asset.PathVirtual.StartsWith("Hyperline/"))
+                    if (Path.GetExtension(asset.PathVirtual)?.ToLowerInvariant() != ".preset" ||
+                        !asset.PathVirtual.StartsWith("Hyperline/"))
                     {
-                        string presetName = asset.PathVirtual[10..];
-                        presetName = presetName[..^7];
-                        Preset preset = new();
-                        MemoryStream stream = new(asset.Data);
-                        BinaryReader reader = new(stream);
-                        preset.Read(reader);
-
-                        Presets[presetName] = preset;
-                        Logger.Log(LogLevel.Info, "Hyperline", "Loaded preset " + presetName + " path " + asset.PathVirtual);
+                        continue;
                     }
+
+                    string presetName = asset.PathVirtual[10..];
+                    presetName = presetName[..^7];
+                    Preset preset = new();
+                    MemoryStream stream = new(asset.Data);
+                    BinaryReader reader = new(stream);
+                    preset.Read(reader);
+
+                    Presets[presetName] = preset;
+                    Logger.Log(LogLevel.Info, "Hyperline", "Loaded preset " + presetName + " path " + asset.PathVirtual);
                 }
             }
 

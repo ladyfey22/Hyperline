@@ -49,7 +49,7 @@
                 }
 
                 HairSpeed = Math.Clamp((int?)dashCountElement.Element("hairSpeed") ?? 0, MinHairSpeed, MaxHairSpeed);
-                HairPhase = Math.Clamp(((int?)dashCountElement.Element("hairPhase")) ?? 0, 0, 100);
+                HairPhase = Math.Clamp((int?)dashCountElement.Element("hairPhase") ?? 0, 0, 100);
                 HairBangsSource = (string)dashCountElement.Element("bangsTexture") ?? "";
                 HairTextureSource = (string)dashCountElement.Element("hairTexture") ?? "";
 
@@ -122,11 +122,11 @@
 
         public void ResetSettings()
         {
-            DashList = new List<DashSettings>((int)Hyperline.MaxDashCount);
+            DashList = new((int)Hyperline.MaxDashCount);
 
             for (int i = 0; i < Hyperline.MaxDashCount; i++)
             {
-                DashList.Add(new DashSettings(i));
+                DashList.Add(new(i));
             }
         }
 
@@ -253,19 +253,21 @@
                         foreach (XElement dashCountElement in dashesElement.Elements("dash"))
                         {
                             XAttribute dashAttr = dashCountElement.Attribute("count");
-                            if (dashAttr != null)
+                            if (dashAttr == null)
                             {
-                                int dash = (int)dashAttr;
-                                if (dash < Hyperline.MaxDashCount)
-                                {
-                                    DashList[dash].Read(dashCountElement);
-                                }
+                                continue;
+                            }
+
+                            int dash = (int)dashAttr;
+                            if (dash < Hyperline.MaxDashCount)
+                            {
+                                DashList[dash].Read(dashCountElement);
                             }
                         }
                     }
                     else
                     {
-                        Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dashs element.");
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Hyperline settings XML missing dashes element.");
                     }
                 }
                 else
@@ -275,7 +277,7 @@
             }
             catch (Exception exception)
             {
-                Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception.ToString());
+                Logger.Log(LogLevel.Error, "Hyperline", "Error while loading save file...\n" + exception);
             }
         }
 

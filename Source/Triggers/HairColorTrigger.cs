@@ -1,6 +1,6 @@
 namespace Celeste.Mod.Hyperline.Triggers
 {
-    using global::Celeste.Mod.Entities;
+    using Entities;
     using Microsoft.Xna.Framework;
 
     [CustomEntity("Hyperline/HairColorTrigger")]

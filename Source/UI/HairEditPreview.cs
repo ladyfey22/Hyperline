@@ -9,7 +9,7 @@ namespace Celeste.Mod.Hyperline.UI
     {
         private readonly MTexture hairTexture;
 
-        private Vector2 scale = new(4, 4);
+        private readonly Vector2 scale = new(4, 4);
         private float time;
         private readonly int dashes;
         private const float Gap = 2;
@@ -48,16 +48,18 @@ namespace Celeste.Mod.Hyperline.UI
         {
             for (int i = 0; i < GetHairCount(); i++)
             {
-                float phaseShift = Math.Abs((i + GetHairPhase()) / ((float)GetHairCount()));
+                float phaseShift = Math.Abs((i + GetHairPhase()) / (float)GetHairCount());
                 float phase = phaseShift + (GetHairSpeed() / 20.0f * time);
                 phase -= (float)Math.Floor(phase);
 
                 IHairType previewHair = GetHair();
-                if (previewHair != null)
+                if (previewHair == null)
                 {
-                    Color returnV = previewHair.GetColor(Color.Red, phase);
-                    hairTexture.Draw(position + (Vector2.UnitX * Gap * i * scale.X), Vector2.Zero, returnV, scale);
+                    continue;
                 }
+
+                Color returnV = previewHair.GetColor(Color.Red, phase);
+                hairTexture.Draw(position + (Vector2.UnitX * Gap * i * scale.X), Vector2.Zero, returnV, scale);
             }
 
         }

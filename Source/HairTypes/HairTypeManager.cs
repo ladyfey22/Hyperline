@@ -78,7 +78,7 @@
             uint i = 0;
             foreach (KeyValuePair<uint, IHairType> hair in hairTypes)
             {
-                hairNames[i] = new KeyValuePair<uint, string>(hair.Key, Dialog.Clean(hair.Value.GetHairName()));
+                hairNames[i] = new(hair.Key, Dialog.Clean(hair.Value.GetHairName()));
                 i++;
             }
             return hairNames;

@@ -10,4 +10,10 @@ using MonoMod.ModInterop;
 public static class HyperlineExports
 {
     public static void AddHairType(IHairType hairType) => Hyperline.AddHairType(hairType);
+
+    /// <summary>
+    /// Called to replace the current preset temporarily with a triggered one, useful for creating custom triggers in a map.
+    /// </summary>
+    /// <param name="preset">The preset to override with. If null, clear the current preset.</param>
+    public static void SetTriggerPreset(string preset) => Hyperline.TriggerManager.Trigger(preset);
 }

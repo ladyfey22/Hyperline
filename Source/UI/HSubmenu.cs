@@ -268,7 +268,7 @@ namespace Celeste.Mod.Hyperline.UI
                 Current.OnEnter?.Invoke();
                 if (wiggle)
                 {
-                    Audio.Play((direction > 0) ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
+                    Audio.Play(direction > 0 ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
                     Current.SelectWiggler.Start();
                 }
             }
@@ -465,7 +465,7 @@ namespace Celeste.Mod.Hyperline.UI
                 if (Container.Height > Container.ScrollableMinSize)
                 {
                     TextMenu container = Container;
-                    container.Position.Y += (ScrollTargetY - Container.Position.Y) * (1f - (float)Math.Pow(0.009999999776482582, (double)Engine.RawDeltaTime));
+                    container.Position.Y += (ScrollTargetY - Container.Position.Y) * (1f - (float)Math.Pow(0.009999999776482582, Engine.RawDeltaTime));
                     return;
                 }
                 Container.Position.Y = 540f;
@@ -476,13 +476,13 @@ namespace Celeste.Mod.Hyperline.UI
         {
             Vector2 vector = new(position.X, position.Y - (Height() / 2f));
             float alpha = Container.Alpha;
-            Color color = Disabled ? Color.DarkSlateGray : ((highlighted ? Container.HighlightColor : Color.White) * alpha);
+            Color color = Disabled ? Color.DarkSlateGray : (highlighted ? Container.HighlightColor : Color.White) * alpha;
             Color color2 = Color.Black * (alpha * alpha * alpha);
             bool flag = Container.InnerContent == TextMenu.InnerContentMode.TwoColumn && !AlwaysCenter;
-            Vector2 vector2 = vector + (Vector2.UnitY * TitleHeight / 2f) + (flag ? Vector2.Zero : new Vector2(Container.Width * 0.5f, 0f));
-            Vector2 vector3 = flag ? new Vector2(0f, 0.5f) : new Vector2(0.5f, 0.5f);
-            Vector2 vector4 = flag ? new Vector2(ActiveFont.Measure(Label).X + Icon.Width, 5f) : new Vector2((ActiveFont.Measure(Label).X / 2f) + Icon.Width, 5f);
-            HSubMenu.DrawIcon(vector2, Icon, vector4, true, ((Disabled || Items.Count < 1) ? Color.DarkSlateGray : (Focused ? Container.HighlightColor : Color.White)) * alpha, 0.8f);
+            Vector2 vector2 = vector + (Vector2.UnitY * TitleHeight / 2f) + (flag ? Vector2.Zero : new(Container.Width * 0.5f, 0f));
+            Vector2 vector3 = flag ? new(0f, 0.5f) : new Vector2(0.5f, 0.5f);
+            Vector2 vector4 = flag ? new(ActiveFont.Measure(Label).X + Icon.Width, 5f) : new Vector2((ActiveFont.Measure(Label).X / 2f) + Icon.Width, 5f);
+            DrawIcon(vector2, Icon, vector4, true, (Disabled || Items.Count < 1 ? Color.DarkSlateGray : Focused ? Container.HighlightColor : Color.White) * alpha, 0.8f);
             ActiveFont.DrawOutline(Label, vector2, vector3, Vector2.One, color, 2f, color2);
             if (ShouldRender && ease > 0.9f)
             {

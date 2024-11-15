@@ -71,7 +71,7 @@ namespace Celeste.Mod.Hyperline.UI
             {
                 float num = Engine.Height - 150 - (Container.Height * Container.Justify.Y);
                 float num2 = 150f + (Container.Height * Container.Justify.Y);
-                return Calc.Clamp((Engine.Height / 2) + (Container.Height * Container.Justify.Y) - GetYOffsetOf(Current), num, num2);
+                return Calc.Clamp((Engine.Height / 2f) + (Container.Height * Container.Justify.Y) - GetYOffsetOf(Current), num, num2);
             }
         }
 
@@ -115,11 +115,11 @@ namespace Celeste.Mod.Hyperline.UI
 
                         item.Added();
                     }
-                    Menus.Add(new Tuple<string, List<TextMenu.Item>>(label, items));
+                    Menus.Add(new(label, items));
                 }
                 else
                 {
-                    Menus.Add(new Tuple<string, List<TextMenu.Item>>(label, []));
+                    Menus.Add(new(label, []));
                 }
                 if (Selection == -1)
                 {
@@ -128,7 +128,7 @@ namespace Celeste.Mod.Hyperline.UI
                 RecalculateSize();
                 return this;
             }
-            delayedAddMenus.Add(new Tuple<string, List<TextMenu.Item>>(label, items));
+            delayedAddMenus.Add(new(label, items));
             return this;
         }
 
@@ -158,7 +158,7 @@ namespace Celeste.Mod.Hyperline.UI
             {
                 while (enumerator.MoveNext())
                 {
-                    if (enumerator.Current.Hoverable)
+                    if (enumerator.Current is { Hoverable: true })
                     {
                         num++;
                     }
@@ -193,18 +193,22 @@ namespace Celeste.Mod.Hyperline.UI
             {
                 Selection = selection;
             }
-            if (Selection != selection && Current != null)
+
+            if (Selection == selection || Current == null)
             {
-                if (selection >= 0 && CurrentMenu[selection] != null && CurrentMenu[selection].OnLeave != null)
-                {
-                    CurrentMenu[selection].OnLeave();
-                }
-                Current.OnEnter?.Invoke();
-                if (wiggle)
-                {
-                    Audio.Play((direction > 0) ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
-                    Current.SelectWiggler.Start();
-                }
+                return;
+            }
+
+            if (selection >= 0 && CurrentMenu[selection] != null && CurrentMenu[selection].OnLeave != null)
+            {
+                CurrentMenu[selection].OnLeave();
+            }
+
+            Current.OnEnter?.Invoke();
+            if (wiggle)
+            {
+                Audio.Play(direction > 0 ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
+                Current.SelectWiggler.Start();
             }
         }
 
@@ -273,50 +277,48 @@ namespace Celeste.Mod.Hyperline.UI
         // Token: 0x0600367A RID: 13946 RVA: 0x001515B0 File Offset: 0x0014F7B0
         public override void LeftPressed()
         {
-            if (MenuIndex > 0)
+            if (MenuIndex <= 0)
             {
-                Audio.Play("event:/ui/main/button_toggle_off");
-                MenuIndex--;
-                lastDir = -1;
-                ValueWiggler.Start();
-                FirstSelection();
-                Action<int> onValueChange = OnValueChange;
-                if (onValueChange == null)
-                {
-                    return;
-                }
-                onValueChange(MenuIndex);
+                return;
             }
+
+            Audio.Play("event:/ui/main/button_toggle_off");
+            MenuIndex--;
+            lastDir = -1;
+            ValueWiggler.Start();
+            FirstSelection();
+            Action<int> onValueChange = OnValueChange;
+            onValueChange?.Invoke(MenuIndex);
         }
 
         // Token: 0x0600367B RID: 13947 RVA: 0x00151610 File Offset: 0x0014F810
         public override void RightPressed()
         {
-            if (MenuIndex < Menus.Count - 1)
+            if (MenuIndex >= Menus.Count - 1)
             {
-                Audio.Play("event:/ui/main/button_toggle_on");
-                MenuIndex++;
-                lastDir = 1;
-                ValueWiggler.Start();
-                FirstSelection();
-                Action<int> onValueChange = OnValueChange;
-                if (onValueChange == null)
-                {
-                    return;
-                }
-                onValueChange(MenuIndex);
+                return;
             }
+
+            Audio.Play("event:/ui/main/button_toggle_on");
+            MenuIndex++;
+            lastDir = 1;
+            ValueWiggler.Start();
+            FirstSelection();
+            Action<int> onValueChange = OnValueChange;
+            onValueChange?.Invoke(MenuIndex);
         }
 
         public override void ConfirmPressed()
         {
-            if (CurrentMenu.Count > 0)
+            if (CurrentMenu.Count <= 0)
             {
-                containerAutoScroll = Container.AutoScroll;
-                Container.AutoScroll = false;
-                Enter();
-                FirstSelection();
+                return;
             }
+
+            containerAutoScroll = Container.AutoScroll;
+            Container.AutoScroll = false;
+            Enter();
+            FirstSelection();
         }
 
         public override float LeftWidth() => ActiveFont.Measure(Label).X;
@@ -324,7 +326,7 @@ namespace Celeste.Mod.Hyperline.UI
         public override float RightWidth()
         {
             float num = 0f;
-            foreach (string text in Menus.Select((Tuple<string, List<TextMenu.Item>> tuple) => tuple.Item1))
+            foreach (string text in Menus.Select(tuple => tuple.Item1))
             {
                 num = Math.Max(num, ActiveFont.Measure(text).X);
             }
@@ -414,25 +416,21 @@ namespace Celeste.Mod.Hyperline.UI
                 }
                 else if (Engine.Scene.OnRawInterval(0.1f))
                 {
-                    if (highlightColor == TextMenu.HighlightColorA)
-                    {
-                        highlightColor = TextMenu.HighlightColorB;
-                    }
-                    else
-                    {
-                        highlightColor = TextMenu.HighlightColorA;
-                    }
+                    highlightColor = highlightColor == TextMenu.HighlightColorA ? TextMenu.HighlightColorB : TextMenu.HighlightColorA;
                 }
-                if (Focused && containerAutoScroll)
+
+                if (!Focused || !containerAutoScroll)
                 {
-                    if (Container.Height > Container.ScrollableMinSize)
-                    {
-                        TextMenu container = Container;
-                        container.Position.Y += (ScrollTargetY - Container.Position.Y) * (1f - (float)Math.Pow(0.009999999776482582, (double)Engine.RawDeltaTime));
-                        return;
-                    }
-                    Container.Position.Y = 540f;
+                    return;
                 }
+
+                if (Container.Height > Container.ScrollableMinSize)
+                {
+                    TextMenu container = Container;
+                    container.Position.Y += (ScrollTargetY - Container.Position.Y) * (1f - (float)Math.Pow(0.009999999776482582, Engine.RawDeltaTime));
+                    return;
+                }
+                Container.Position.Y = 540f;
             }
         }
 
@@ -441,21 +439,19 @@ namespace Celeste.Mod.Hyperline.UI
         {
             Vector2 vector = new(position.X, position.Y - (Height() / 2f));
             float alpha = Container.Alpha;
-            Color color = Disabled ? Color.DarkSlateGray : ((highlighted ? Container.HighlightColor : Color.White) * alpha);
+            Color color = Disabled ? Color.DarkSlateGray : (highlighted ? Container.HighlightColor : Color.White) * alpha;
             Color color2 = Color.Black * (alpha * alpha * alpha);
             bool flag = Container.InnerContent == TextMenu.InnerContentMode.TwoColumn && !AlwaysCenter;
-            Vector2 vector2 = vector + (Vector2.UnitY * TitleHeight / 2f) + (flag ? Vector2.Zero : new Vector2(Container.Width * 0.5f, 0f));
-            Vector2 vector3 = flag ? new Vector2(0f, 0.5f) : new Vector2(0.5f, 0.5f);
-            Vector2 vector4 = flag ? new Vector2(ActiveFont.Measure(Label).X + Icon.Width, 5f) : new Vector2((ActiveFont.Measure(Label).X / 2f) + Icon.Width, 5f);
-            Vector2 vector5 = vector2;
+            Vector2 vector2 = vector + (Vector2.UnitY * TitleHeight / 2f) + (flag ? Vector2.Zero : new(Container.Width * 0.5f, 0f));
+            Vector2 vector3 = flag ? new(0f, 0.5f) : new Vector2(0.5f, 0.5f);
+            Vector2 vector4 = flag ? new(ActiveFont.Measure(Label).X + Icon.Width, 5f) : new Vector2((ActiveFont.Measure(Label).X / 2f) + Icon.Width, 5f);
             MTexture icon = Icon;
-            Vector2 vector6 = vector4;
-            bool flag2 = true;
+            const bool flag2 = true;
             Color color3;
             if (!Disabled)
             {
                 List<TextMenu.Item> currentMenu = CurrentMenu;
-                if (currentMenu == null || currentMenu.Count >= 1)
+                if (currentMenu is not { Count: < 1 })
                 {
                     color3 = Focused ? Container.HighlightColor : Color.White;
                     goto IL_019D;
@@ -463,38 +459,43 @@ namespace Celeste.Mod.Hyperline.UI
             }
             color3 = Color.DarkSlateGray;
             IL_019D:
-            DrawIcon(vector5, icon, vector6, flag2, color3 * alpha, 0.8f);
+            DrawIcon(vector2, icon, vector4, flag2, color3 * alpha, 0.8f);
             ActiveFont.DrawOutline(Label, vector2, vector3, Vector2.One, color, 2f, color2);
             if (Menus.Count > 0)
             {
                 float num = RightWidth();
-                ActiveFont.DrawOutline(Menus[MenuIndex].Item1, vector2 + new Vector2(Container.Width - (num * 0.5f) + (lastDir * ValueWiggler.Value * 8f), 0f), new Vector2(0.5f, 0.5f), Vector2.One * 0.8f, color, 2f, color2);
-                Vector2 vector7 = Vector2.UnitX * (highlighted ? ((float)Math.Sin((double)(sine * 4f)) * 4f) : 0f);
-                Color color4 = (MenuIndex > 0) ? color : (Color.DarkSlateGray * alpha);
-                Vector2 vector8 = vector2 + new Vector2(Container.Width - num + 40f + ((lastDir < 0) ? (-ValueWiggler.Value * 8f) : 0f), 0f) - ((MenuIndex > 0) ? vector7 : Vector2.Zero);
-                ActiveFont.DrawOutline("<", vector8, new Vector2(0.5f, 0.5f), Vector2.One, color4, 2f, color2);
-                color4 = (MenuIndex < Menus.Count - 1) ? color : (Color.DarkSlateGray * alpha);
-                vector8 = vector2 + new Vector2(Container.Width - 40f + ((lastDir > 0) ? (ValueWiggler.Value * 8f) : 0f), 0f) + ((MenuIndex < Menus.Count - 1) ? vector7 : Vector2.Zero);
-                ActiveFont.DrawOutline(">", vector8, new Vector2(0.5f, 0.5f), Vector2.One, color4, 2f, color2);
+                ActiveFont.DrawOutline(Menus[MenuIndex].Item1, vector2 + new Vector2(Container.Width - (num * 0.5f) + (lastDir * ValueWiggler.Value * 8f), 0f), new(0.5f, 0.5f), Vector2.One * 0.8f, color, 2f, color2);
+                Vector2 vector7 = Vector2.UnitX * (highlighted ? (float)Math.Sin(sine * 4f) * 4f : 0f);
+                Color color4 = MenuIndex > 0 ? color : Color.DarkSlateGray * alpha;
+                Vector2 vector8 = vector2 + new Vector2(Container.Width - num + 40f + (lastDir < 0 ? -ValueWiggler.Value * 8f : 0f), 0f) - (MenuIndex > 0 ? vector7 : Vector2.Zero);
+                ActiveFont.DrawOutline("<", vector8, new(0.5f, 0.5f), Vector2.One, color4, 2f, color2);
+                color4 = MenuIndex < Menus.Count - 1 ? color : Color.DarkSlateGray * alpha;
+                vector8 = vector2 + new Vector2(Container.Width - 40f + (lastDir > 0 ? ValueWiggler.Value * 8f : 0f), 0f) + (MenuIndex < Menus.Count - 1 ? vector7 : Vector2.Zero);
+                ActiveFont.DrawOutline(">", vector8, new(0.5f, 0.5f), Vector2.One, color4, 2f, color2);
             }
-            if (CurrentMenu != null)
+
+            if (CurrentMenu == null)
             {
-                Vector2 vector9 = new(vector.X + ItemIndent, vector.Y + TitleHeight + ItemSpacing);
-                float y = vector9.Y;
-                RecalculateSize();
-                foreach (TextMenu.Item item in CurrentMenu)
+                return;
+            }
+
+            Vector2 vector9 = new(vector.X + ItemIndent, vector.Y + TitleHeight + ItemSpacing);
+            float y = vector9.Y;
+            RecalculateSize();
+            foreach (TextMenu.Item item in CurrentMenu)
+            {
+                if (!item.Visible)
                 {
-                    if (item.Visible)
-                    {
-                        float num2 = item.Height();
-                        Vector2 vector10 = vector9 + new Vector2(0f, (num2 * 0.5f) + (item.SelectWiggler.Value * 8f));
-                        if (vector10.Y - y < MenuHeight && vector10.Y + (num2 * 0.5f) > 0f && vector10.Y - (num2 * 0.5f) < Engine.Height)
-                        {
-                            item.Render(vector10, Focused && Current == item);
-                        }
-                        vector9.Y += num2 + ItemSpacing;
-                    }
+                    continue;
                 }
+
+                float num2 = item.Height();
+                Vector2 vector10 = vector9 + new Vector2(0f, (num2 * 0.5f) + (item.SelectWiggler.Value * 8f));
+                if (vector10.Y - y < MenuHeight && vector10.Y + (num2 * 0.5f) > 0f && vector10.Y - (num2 * 0.5f) < Engine.Height)
+                {
+                    item.Render(vector10, Focused && Current == item);
+                }
+                vector9.Y += num2 + ItemSpacing;
             }
         }
 

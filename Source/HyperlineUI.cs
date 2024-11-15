@@ -55,7 +55,7 @@
 
         public List<List<TextMenu.Item>> CreateDashCountMenu(TextMenu menu, bool inGame, int dashes, out TextMenuExt.EnumerableSlider<uint> typeSlider)
         {
-            typeSlider = new TextMenuExt.EnumerableSlider<uint>("Type:", Hyperline.HairTypes.GetHairNames(), Hyperline.Settings.DashList[dashes].HairType);
+            typeSlider = new("Type:", Hyperline.HairTypes.GetHairNames(), Hyperline.Settings.DashList[dashes].HairType);
             typeSlider.Change(v => { Hyperline.Settings.DashList[dashes].HairType = v; UpdateHairType(dashes, v); });
             List<List<TextMenu.Item>> returnV = [];
             foreach (KeyValuePair<uint, IHairType> hair in Hyperline.Settings.DashList[dashes].HairList)
@@ -86,7 +86,7 @@
                 uint i = 0;
                 foreach (KeyValuePair<string, PresetManager.Preset> preset in Hyperline.PresetManager.Presets)
                 {
-                    presetList.Add(new KeyValuePair<uint, string>(i, preset.Key));
+                    presetList.Add(new(i, preset.Key));
                     i++;
                 }
 
@@ -132,14 +132,14 @@
                     Audio.Play(SFX.ui_main_savefile_rename_start);
                     menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Hyperline.Settings.DashList[r].HairTextureSource, v => { Hyperline.Settings.DashList[r].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(r); }, 12);
                 });
-                textureButton.Disabled = !inGame;
+                textureButton.Disabled = inGame;
 
                 TextMenu.Item bangsButton = new TextMenu.Button("Custom Bangs: " + Hyperline.Settings.DashList[counterd].HairBangsSource).Pressed(() =>
                 {
                     Audio.Play(SFX.ui_main_savefile_rename_start);
                     menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Hyperline.Settings.DashList[r].HairBangsSource, v => { Hyperline.Settings.DashList[r].HairBangsSource = v; Hyperline.Settings.LoadCustomBangs(r); }, 12);
                 });
-                bangsButton.Disabled = !inGame;
+                bangsButton.Disabled = inGame;
 
                 dashMenu.Add(textureButton);
                 dashMenu.Add(bangsButton);

@@ -19,8 +19,8 @@
 
         public GradientHair()
         {
-            color1 = new HSVColor();
-            color2 = new HSVColor();
+            color1 = new();
+            color2 = new();
             doRgbGradient = false;
             colorReturn = false;
             cycles = 1;
@@ -54,7 +54,7 @@
 
             if (doRgbGradient)
             {
-                return new Color((byte)(color1.R + (((float)color2.R - color1.R) * phase)),
+                return new((byte)(color1.R + (((float)color2.R - color1.R) * phase)),
                                  (byte)(color1.G + (((float)color2.G - color1.G) * phase)),
                                  (byte)(color1.B + (((float)color2.B - color1.B) * phase)));
             }
@@ -69,8 +69,8 @@
         {
             List<TextMenu.Item> colorMenus = [];
 
-            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 1 ", color1, inGame).Change(v => color1 = new HSVColor(v)));
-            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 2 ", color2, inGame).Change(v => color2 = new HSVColor(v)));
+            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 1 ", color1, inGame).Change(v => color1 = new(v)));
+            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 2 ", color2, inGame).Change(v => color2 = new(v)));
             colorMenus.Add(new TextMenu.OnOff("Rgb Gradient", doRgbGradient).Change(v => doRgbGradient = v));
             colorMenus.Add(new TextMenu.Slider("Cycles", v => v.ToString(), MinCycles, MaxCycles, cycles).Change(v => cycles = v));
             colorMenus.Add(new TextMenu.OnOff("Do Return Gradient", colorReturn).Change(v => colorReturn = v));
@@ -90,8 +90,8 @@
                 return returnV;
             }
 
-            returnV.color1 = new HSVColor(tokenList[0]);
-            returnV.color2 = new HSVColor(tokenList[1]);
+            returnV.color1 = new(tokenList[0]);
+            returnV.color2 = new(tokenList[1]);
             if (tokenList.Length >= 3)
             {
                 returnV.doRgbGradient = bool.Parse(tokenList[2]);

@@ -2,15 +2,15 @@
 {
     public class Hashing
     {
-        public const uint VAL32CONST = 0x811c9dc5;
-        public const uint PRIME32CONST = 0x1000193;
+        public const uint Val32Const = 0x811c9dc5;
+        public const uint Prime32Const = 0x1000193;
 
         public static uint FNV1Hash(string str)
         {
-            uint hash = VAL32CONST;
+            uint hash = Val32Const;
             foreach (char c in str)
             {
-                hash *= PRIME32CONST;
+                hash *= Prime32Const;
                 hash ^= c;
             }
             return hash;

@@ -11,7 +11,7 @@
 
         public SolidHair()
         {
-            color = new HSVColor();
+            color = new();
         }
 
         public SolidHair(HSVColor color)
@@ -34,7 +34,7 @@
         {
             List<TextMenu.Item> colorMenus =
             [
-                new UI.ColorSubmenu(menu, "Color ", color, inGame).Change(v => color = new HSVColor(v))
+                new UI.ColorSubmenu(menu, "Color ", color, inGame).Change(v => color = new(v))
             ];
             return colorMenus;
         }
@@ -48,7 +48,7 @@
             string[] tokens = str.Split(',');
             if (tokens.Length >= 1)
             {
-                returnV.color = new HSVColor(tokens[0]);
+                returnV.color = new(tokens[0]);
             }
 
             return returnV;

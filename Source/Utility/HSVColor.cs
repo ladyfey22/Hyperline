@@ -55,11 +55,10 @@
             float r = colorIn.R / 255f;
             float g = colorIn.G / 255f;
             float b = colorIn.B / 255f;
-            float min, max, delta;
-            min = Math.Min(Math.Min(r, g), b);
-            max = Math.Max(Math.Max(r, g), b);
+            float min = Math.Min(Math.Min(r, g), b);
+            float max = Math.Max(Math.Max(r, g), b);
             V = max;
-            delta = max - min;
+            float delta = max - min;
             if (max != 0)
             {
                 S = delta / max;
@@ -116,27 +115,27 @@
             int t = (int)Math.Round(vf * (1 - ((1 - f) * S)));
             if (hi == 0)
             {
-                internalColor = new Color(v, t, p, 255);
+                internalColor = new(v, t, p, 255);
             }
             else if (hi == 1)
             {
-                internalColor = new Color(q, v, p, 255);
+                internalColor = new(q, v, p, 255);
             }
             else if (hi == 2)
             {
-                internalColor = new Color(p, v, t, 255);
+                internalColor = new(p, v, t, 255);
             }
             else if (hi == 3)
             {
-                internalColor = new Color(p, q, v, 255);
+                internalColor = new(p, q, v, 255);
             }
             else if (hi == 4)
             {
-                internalColor = new Color(t, p, v, 255);
+                internalColor = new(t, p, v, 255);
             }
             else
             {
-                internalColor = new Color(v, p, q, 255);
+                internalColor = new(v, p, q, 255);
             }
         }
 
@@ -150,7 +149,7 @@
             {
                 if (colorString.Length == 6)    //Assumed to be an RGB value.
                 {
-                    FromColor(new Color(
+                    FromColor(new(
                                 int.Parse(colorString[..2], NumberStyles.HexNumber),
                                 int.Parse(colorString.Substring(2, 2), NumberStyles.HexNumber),
                                 int.Parse(colorString.Substring(4, 2), NumberStyles.HexNumber),

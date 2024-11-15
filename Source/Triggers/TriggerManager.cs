@@ -1,6 +1,5 @@
 namespace Celeste.Mod.Hyperline
 {
-    using System;
     using System.IO;
     using System.Xml.Linq;
 
@@ -8,10 +7,6 @@ namespace Celeste.Mod.Hyperline
     {
         public string CurrentPresetName { get; set; }
         public PresetManager.Preset CurrentPreset { get; set; }
-
-        public TriggerManager()
-        {
-        }
 
         public void Trigger(string preset)
         {
@@ -39,11 +34,13 @@ namespace Celeste.Mod.Hyperline
             MemoryStream currentReader = new(reader.ReadBytes((int)reader.BaseStream.Length));
             XDocument document = XDocument.Load(currentReader);
             XElement root = document.Element("root");
-            if (root != null)
+            if (root == null)
             {
-                string presetName = (string)document.Element("preset") ?? "";
-                Trigger(presetName);
+                return;
             }
+
+            string presetName = (string)root.Element("preset") ?? "";
+            Trigger(presetName);
         }
 
         public void Write(BinaryWriter writer)
@@ -59,5 +56,17 @@ namespace Celeste.Mod.Hyperline
             byte[] bytes = currentWriter.ToArray();
             writer.Write(bytes, 0, bytes.Length);
         }
+
+        public static void OnLevelEntry(Session session, bool fromSaveData)
+        {
+            Logger.Log(LogLevel.Error, "Hyperline", "Preset loaded " + Hyperline.TriggerManager.CurrentPresetName);
+            if (Hyperline.Settings.Enabled && !fromSaveData)
+            {
+                Hyperline.TriggerManager.Trigger(null);
+            }
+        }
+
+        public static void Hook() => Everest.Events.Level.OnEnter += OnLevelEntry;
+        public static void Unhook() => Everest.Events.Level.OnEnter -= OnLevelEntry;
     }
 }
