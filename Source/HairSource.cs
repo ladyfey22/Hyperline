@@ -13,7 +13,7 @@ namespace Celeste.Mod.Hyperline
         public virtual IHairType GetHair(int dashes)
         {
             HyperlineSettings.DashSettings hairSettings = GetDash(dashes);
-            if (hairSettings.HairList.TryGetValue(hairSettings.HairType, out IHairType value))
+            if (hairSettings != null && hairSettings.HairList.TryGetValue(hairSettings.HairType, out IHairType value))
             {
                 return value;
             }
