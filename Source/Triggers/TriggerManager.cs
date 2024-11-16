@@ -59,7 +59,6 @@ namespace Celeste.Mod.Hyperline
 
         public static void OnLevelEntry(Session session, bool fromSaveData)
         {
-            Logger.Log(LogLevel.Error, "Hyperline", "Preset loaded " + Hyperline.TriggerManager.CurrentPresetName);
             if (Hyperline.Settings.Enabled && !fromSaveData)
             {
                 Hyperline.TriggerManager.Trigger(null);

@@ -83,7 +83,7 @@ namespace Celeste.Mod.Hyperline
     {
         public override HyperlineSettings.DashSettings GetDash(int dashes)
         {
-            if (Hyperline.TriggerManager != null && Hyperline.TriggerManager.CurrentPreset != null && dashes >= 0 && dashes < (int)Hyperline.MaxDashCount)
+            if (Hyperline.TriggerManager != null && Hyperline.TriggerManager.CurrentPreset != null && dashes >= 0 && dashes < (int)Hyperline.MaxDashCount && Hyperline.Settings.AllowMapHairColors)
             {
                 return Hyperline.TriggerManager.CurrentPreset.DashList[dashes];
             }

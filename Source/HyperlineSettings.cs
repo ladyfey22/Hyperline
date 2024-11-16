@@ -21,7 +21,7 @@
         public class DashSettings(int dash) : ICloneable
         {
             public uint HairType { get; set; } = SolidHair.Hash;
-            public int HairSpeed { get; set; } = 4;
+            public int HairSpeed { get; set; }
             public int HairLength { get; set; } = 4;
             public int HairPhase { get; set; }
             public List<MTexture> HairTextures { get; set; }
