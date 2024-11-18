@@ -16,21 +16,30 @@
         public const int MinHairPhase = 0;
         public const int MaxHairPhase = 100;
 
-        public byte[] Version { get; private set; } = [0, 3, 0];  //MAJOR,MINOR,SUB
+        public byte[] Version { get; private set; } = [0, 3, 3];  //MAJOR,MINOR,SUB
 
-        public class DashSettings(int dash) : ICloneable
+        public class DashSettings : ICloneable
         {
-            public uint HairType { get; set; } = SolidHair.Hash;
+            public uint HairType { get; set; } = DefaultHair.Hash;
             public int HairSpeed { get; set; }
-            public int HairLength { get; set; } = 4;
+            public int HairLength { get; set; }
             public int HairPhase { get; set; }
             public List<MTexture> HairTextures { get; set; }
             public string HairTextureSource { get; set; } = string.Empty;
             public string HairBangsSource { get; set; } = string.Empty;
+
+            public int Dash { get; set; }
             public List<MTexture> HairBangs { get; set; }
             public Dictionary<uint, IHairType> HairList { get; set; } = Hyperline.HairTypes.CopyHairDict();
 
             public object Clone() => MemberwiseClone();
+
+            public DashSettings(int dashCount)
+            {
+                Dash = dashCount;
+
+                HairLength = dashCount < 2 ? 4 : 5;
+            }
 
             public void Read(XElement dashCountElement)
             {
@@ -84,13 +93,13 @@
                         }
                         catch (Exception exception)
                         {
-                            Logger.Log(LogLevel.Warn, "Hyperline", "Exception occured while loading hair type " + currentType.Name.LocalName + " dash count " + dash + "\n" + exception);
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Exception occured while loading hair type " + currentType.Name.LocalName + " dash count " + Dash + "\n" + exception);
                         }
                     }
                 }
                 else
                 {
-                    Logger.Log(LogLevel.Warn, "Hyperline", "XML file missing types for dash count " + dash);
+                    Logger.Log(LogLevel.Warn, "Hyperline", "XML file missing types for dash count " + Dash);
                 }
             }
 
@@ -179,7 +188,7 @@
                 if (!HasAtlasSubtexture("hyperline/" + DashList[i].HairBangsSource))
                 {
                     Logger.Log(LogLevel.Warn, "Hyperline", "Invalid texture inputted in custom bang texture " + DashList[i].HairBangsSource);
-                    DashList[i].HairBangs[i] = null;
+                    DashList[i].HairBangs = null;
                     DashList[i].HairBangsSource = string.Empty;
                 }
                 else
@@ -286,7 +295,7 @@
             MemoryStream currentWriter = new();
             XDocument document = new();
             XElement root = new("root");
-            root.Add(new XElement("enabled", Enabled), new XElement("allowMapHairColor", AllowMapHairColors),
+            root.Add(new XElement("version", $"{Version[0]}.{Version[1]}.{Version[2]}"), new XElement("enabled", Enabled), new XElement("allowMapHairColor", AllowMapHairColors),
                          new XElement("doMaddyCrown", DoMaddyCrown), new XElement("doFeatherColor", DoFeatherColor),
                          new XElement("hairLengthSoftCap", HairLengthSoftCap), new XElement("doDashFlash", DoDashFlash));
 

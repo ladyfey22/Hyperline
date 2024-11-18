@@ -6,6 +6,8 @@
     using MonoMod.ModInterop;
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
+    using MonoMod.RuntimeDetour;
 
     public class Hyperline : EverestModule
     {
@@ -102,21 +104,33 @@
             }
         }
 
+        private static void LoadDetour()
+        {
+            using (new DetourConfigContext(new(
+                       "Hyperline",
+                       before : DetourHelper.GenerateDetourList(["SkinModHelperPlus", "Prideline"], typeof(PlayerHair), "GetHairColor", [typeof(int)]),
+                       after: DetourHelper.GenerateDetourList(["JackalHelper"], typeof(PlayerHair), "GetHairColor", [typeof(int)]))).Use())
+            {
+                On.Celeste.PlayerHair.GetHairTexture += GetHairTexture;
+                On.Celeste.PlayerHair.GetHairColor += GetHairColor;
+                On.Celeste.Player.GetTrailColor += GetTrailColor;
+            }
+        }
+
         public override void Load()
         {
             Logger.Log(LogLevel.Info, "Hyperline", "Starting hyperline Version " + Settings.Version[0] + "-" + Settings.Version[1] + "-" + Settings.Version[2]);
 
-            On.Celeste.PlayerHair.GetHairTexture += GetHairTexture;
-            On.Celeste.PlayerHair.GetHairColor += GetHairColor;
-            On.Celeste.Player.GetTrailColor += GetTrailColor;
             On.Celeste.PlayerHair.AfterUpdate += PlayerHair_AfterUpdate;
+
             On.Celeste.Player.Render += PlayerRender;
             On.Celeste.Player.Added += PlayerAdded;
             On.Celeste.PlayerHair.Render += RenderHair;
             On.Celeste.Player.UpdateHair += UpdateHair;
             On.Celeste.Player.DashUpdate += DashUpdate;
             On.Celeste.Player.Update += PlayerUpdate;
-            TriggerManager.Hook();;
+
+            TriggerManager.Hook();
         }
 
         public override void Unload()
@@ -314,7 +328,7 @@
             }
             else if (player.StateMachine.State != 19)
             {
-                player.Sprite.HairCount = player.Dashes > 1 ? 5 : 4;
+                player.Sprite.HairCount = 4;//player.Dashes > 1 ? 5 : 4;
                 player.Sprite.HairCount += lastHairLength - 4;
             }
             else if (player.StateMachine.State == 19)
@@ -395,17 +409,17 @@
             }
         }
 
-        public override void Initialize() => typeof(HyperlineExports).ModInterop();
+        public override void Initialize()
+        {
+            typeof(HyperlineExports).ModInterop();
+            LoadDetour();
+            //Logger.Log(LogLevel.Debug, "Hyperline", $"Detour info: " + DetourHelper.DumpDetours(typeof(PlayerHair), "GetHairColor", [typeof(int)]));
+        }
 
         public static Color GetTrailColor(On.Celeste.Player.orig_GetTrailColor orig, Player self, bool wasDashB)
         {
             Color colorOrig = orig(self, wasDashB);
-            if (Settings.Enabled)
-            {
-                return GetCurrentColor(Instance.LastColor, self.Dashes, 0);
-            }
-
-            return colorOrig;
+            return Settings.Enabled ? GetCurrentColor(Instance.LastColor, self.Dashes, 0) : colorOrig;
         }
 
     }
