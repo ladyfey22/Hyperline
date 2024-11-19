@@ -106,21 +106,17 @@
 
         private static void LoadDetour()
         {
-//            using (new DetourConfigContext(new(
-//                       "Hyperline",
-//                       before : DetourHelper.GenerateDetourList(["SkinModHelperPlus", "Prideline"], DetourHelper.GetMethodInfo<PlayerHair>("GetHairColor")),
-//                       after: DetourHelper.GenerateDetourList(["JackalHelper"], DetourHelper.GetMethodInfo<PlayerHair>("GetHairColor")))).Use())
-            using (DetourHelper.GenerateDetourContext<PlayerHair>("GetHairColor", before: ["SkinModHelperPlus", "Prideline"], after: ["JackalHelper"]))
+            using (DetourHelper.GenerateDetourContext(typeof(PlayerHair), "GetHairColor", before: ["SkinModHelperPlus", "Prideline"], after: ["JackalHelper"]))
             {
                 On.Celeste.PlayerHair.GetHairColor += GetHairColor;
             }
 
-            using (DetourHelper.GenerateDetourContext<Player>("GetTrailColor", before: ["SkinModHelperPlus", "Prideline"], after: ["JackalHelper"]))
+            using (DetourHelper.GenerateDetourContext(typeof(Player), "GetTrailColor", before: ["SkinModHelperPlus", "Prideline"], after: ["JackalHelper"]))
             {
                 On.Celeste.Player.GetTrailColor += GetTrailColor;
             }
 
-            using (DetourHelper.GenerateDetourContext<PlayerHair>("GetHairTexture", before: ["SkinModHelperPlus", "Cateline", "Bunneline"]))
+            using (DetourHelper.GenerateDetourContext(typeof(PlayerHair), "GetHairTexture", before: ["SkinModHelperPlus", "Cateline", "Bunneline"]))
             {
                 On.Celeste.PlayerHair.GetHairTexture += GetHairTexture;
             }
