@@ -16,7 +16,7 @@
         public const int MinHairPhase = 0;
         public const int MaxHairPhase = 100;
 
-        public byte[] Version { get; private set; } = [0, 3, 3];  //MAJOR,MINOR,SUB
+        public byte[] Version { get; private set; } = [0, 3, 4];  //MAJOR,MINOR,SUB
 
         public class DashSettings : ICloneable
         {

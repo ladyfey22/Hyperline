@@ -3,8 +3,10 @@ namespace Celeste.Mod.Hyperline;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
 
 public class DetourHelper
 {
@@ -34,26 +36,42 @@ public class DetourHelper
         public string Id { get; set; }
     }
 
-    public static List<AssemblyDetourInfo> GetDetourList(Type type, string methodName, Type[] args)
+    public static MethodInfo GetMethodInfo<T>(string name)
     {
-        MethodBase func = type.GetMethod(
-            methodName, // Name of the method,
-            args,
-            null
-        );
+        MethodInfo returnV =typeof(T).GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+        //if it's null, provide some debug info
+        if (returnV == null)
+        {
+            Logger.Log(LogLevel.Warn, "Hyperline", $"DetourHelper.GetMethodInfo<${typeof(T).Name}> Method {name} not found in {typeof(T).Name}");
+        }
+        return returnV;
+    }
 
-        if (func == null)
+    public static DataScope GenerateDetourContext<T>(string methodName, List<string> before = null,
+        List<string> after = null, int? priority = null)
+    {
+        MethodInfo method = GetMethodInfo<T>(methodName);
+
+        List<string> beforeIds = before != null ? GenerateDetourList(before, method)?.ToList() : null;
+        List<string> afterIds = before != null ? GenerateDetourList(after, method)?.ToList() : null;
+        DetourConfigContext returnV = new(new("Hyperline", before: beforeIds, after: afterIds, priority: priority));
+        return returnV.Use();
+    }
+
+    public static List<AssemblyDetourInfo> GetDetourList(MethodInfo methodInfo)
+    {
+        if (methodInfo == null)
         {
             return null;
         }
 
-        MethodDetourInfo detours = DetourManager.GetDetourInfo(func);
+        MethodDetourInfo detours = DetourManager.GetDetourInfo(methodInfo);
         return detours.Detours.Select(detour => new AssemblyDetourInfo(detour)).ToList();
     }
 
-    public static string FindDetourIdFromAssembly(string assemblyName, Type type, string methodName, Type[] args)
+    public static string FindDetourIdFromAssembly(string assemblyName, MethodInfo input)
     {
-        List<AssemblyDetourInfo> detours = GetDetourList(type, methodName, args);
+        List<AssemblyDetourInfo> detours = GetDetourList(input);
         if (detours == null)
         {
             return null;
@@ -69,9 +87,10 @@ public class DetourHelper
         return null;
     }
 
-    public static string DumpDetours(Type type, string methodName, Type[] args)
+    public static string DumpDetours<T>(string methodName)
     {
-        List<AssemblyDetourInfo> detours = GetDetourList(type, methodName, args);
+        MethodInfo method = GetMethodInfo<T>(methodName);
+        List<AssemblyDetourInfo> detours = GetDetourList(method);
         if (detours == null)
         {
             return null;
@@ -86,9 +105,16 @@ public class DetourHelper
         return returnValue;
     }
 
-    public static string[] GenerateDetourList(List<string> assemblyNames, Type type, string methodName, Type[] args)
+    public static string[] GenerateDetourList(List<string> assemblyNames, MethodInfo input)
     {
-        List<AssemblyDetourInfo> detours = GetDetourList(type, methodName, args);
+
+        if (assemblyNames == null)
+        {
+            return null;
+        }
+
+
+        List<AssemblyDetourInfo> detours = GetDetourList(input);
         if (detours == null)
         {
             return null;
