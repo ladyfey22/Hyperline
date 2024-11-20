@@ -4,6 +4,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Reflection;
     using System.Xml.Linq;
 
     [SettingName("modoptions_hyperline_title")]
@@ -16,7 +17,12 @@
         public const int MinHairPhase = 0;
         public const int MaxHairPhase = 100;
 
-        public byte[] Version { get; private set; } = [0, 3, 4];  //MAJOR,MINOR,SUB
+        public List<byte> Version { get;  } =
+        [
+            Assembly.GetExecutingAssembly().GetName().Version != null ? (byte)Assembly.GetExecutingAssembly().GetName().Version!.Major : (byte)0,
+            Assembly.GetExecutingAssembly().GetName().Version != null ? (byte)Assembly.GetExecutingAssembly().GetName().Version!.Minor : (byte)0,
+            Assembly.GetExecutingAssembly().GetName().Version != null ? (byte)Assembly.GetExecutingAssembly().GetName().Version!.Build : (byte)0
+        ];
 
         public class DashSettings : ICloneable
         {

@@ -7,7 +7,8 @@
         <LangVersion>latest</LangVersion>
         <CelestePrefix Condition="'$(CelestePrefix)' == '' And Exists('..\..\..\Celeste.dll')">..\..\..</CelestePrefix>
         <CelestePrefix Condition="'$(CelestePrefix)' == ''">lib-stripped</CelestePrefix>
-        <ZippedFiles>..\everest.yaml;..\bin\**\*.*;..\Audio\**\*.*;..\Dialog\**\*.*;..\Graphics\**\*.*;..\Ahorn\**\*.*;..\Loenn\**\*.*</ZippedFiles>
+        <ZippedFiles>..\everest.yaml;..\Effects\**\*.*;..\bin\**\*.*;..\Audio\**\*.*;..\Dialog\**\*.*;..\Graphics\**\*.*;..\Ahorn\**\*.*;..\Loenn\**\*.*</ZippedFiles>
+        <AssemblyVersion>0.3.4</AssemblyVersion>
     </PropertyGroup>
 
     <!--Disable "Copy Local" for all references-->
@@ -34,11 +35,21 @@
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="..\bin" />
     </Target>
 
-    <Target Name="PackageMod" AfterTargets="CopyFiles" Inputs="$(ZippedFiles)" Outputs="..\Hyperline.zip" Condition="'$(Configuration)' == 'Release'">
-        <ItemGroup>
-            <FilesToPackage Include="$(ZippedFiles)" />
-        </ItemGroup>
-        <PackageMod Files="@(FilesToPackage)" OutputPath="..\Hyperline.zip" />
+    <Target Name="CreateEverestYaml" AfterTargets="CopyFiles" Inputs="$..\bin\$(AssemblyName).dll" Outputs="..\everest.yaml">
+      <!-- debug test message -->
+      <Message Text="Creating Everest YAML file for $(AssemblyName) $(AssemblyVersion)" Importance="high" />
+      <PropertyGroup>
+        <!-- Generate an Everest YAML file, using the assembly version as the mod version -->
+        <EverestYaml>
+- Name: Hyperline
+  Version: $(AssemblyVersion)
+  DLL: bin/Hyperline.dll
+  Dependencies:
+    - Name: EverestCore
+      Version: 1.4673.0
+        </EverestYaml>
+      </PropertyGroup>
+      <WriteLinesToFile File="../everest.yaml" Overwrite="true" Lines="$(EverestYaml)" />
     </Target>
 
     <PropertyGroup>
@@ -99,5 +110,14 @@
             </Code>
         </Task>
     </UsingTask>
+
+    <Target Name="PackageMod" AfterTargets="CreateEverestYaml" Inputs="$(ZippedFiles)" Outputs="..\Hyperline.zip" Condition="'$(Configuration)' == 'Release'">
+      <ItemGroup>
+        <FilesToPackage Include="$(ZippedFiles)" />
+      </ItemGroup>
+      <!-- debug test message -->
+      <Message Text="Creating Hyperline zip file for $(AssemblyName) $(AssemblyVersion)" Importance="high" />
+      <PackageMod Files="@(FilesToPackage)" OutputPath="..\Hyperline-$(AssemblyVersion).zip" />
+    </Target>
 
 </Project>
