@@ -105,9 +105,65 @@
             }
         }
 
+
+        public bool SavePreset(string preset, Preset presetData)
+        {
+            // we want Hyperline to have its own folder in the settings folder
+            string savePath = Path.Combine(Everest.PathSettings, "Hyperline");
+            if (!Directory.Exists(savePath))
+            {
+                Directory.CreateDirectory(savePath);
+            }
+
+            string saveFile = Path.Combine(savePath, preset + ".preset");
+            Logger.Log(LogLevel.Info, "Hyperline", $"Attempting to save preset {preset} to Hyperline folder\n");
+
+            try
+            {
+                using FileStream fileStream = File.Open(saveFile, FileMode.Create);
+                using BinaryWriter writer = new(fileStream);
+                presetData.Write(writer);
+            }
+            catch (Exception exception)
+            {
+                Logger.Log(LogLevel.Error, "Hyperline", "Error while saving preset...\n" + exception);
+                return false;
+            }
+
+            // if we got here, the preset was saved successfully, add it to the list
+            Presets[preset] = presetData; // will overwrite if it already exists
+
+            return true;
+        }
+
+        public void LoadPresetsFromPath(string path)
+        {
+            // load presets from a specific path, making sure to check path and file extensions
+            if (!Directory.Exists(path))
+            {
+                return;
+            }
+
+            foreach (string filename in Directory.GetFiles(path, "*.preset"))
+            {
+                string presetName = Path.GetFileNameWithoutExtension(filename);
+                Preset preset = new();
+
+                FileStream fileStream = File.OpenRead(filename);
+
+                MemoryStream memoryStream = new();
+                fileStream.CopyTo(memoryStream);
+
+                BinaryReader reader = new(File.OpenRead(filename));
+                preset.Read(reader);
+                Presets[presetName] = preset;
+                Logger.Log(LogLevel.Info, "Hyperline", "Loaded preset " + presetName);
+            }
+        }
+
         public void LoadContent()
         {
-            Logger.Log("Hyperline", "Attempting to load presets....\n");
+            Logger.Log(LogLevel.Info, "Hyperline", "Attempting to load presets....\n");
             Presets = [];
 
             foreach (ModContent content in Everest.Content.Mods)
@@ -133,19 +189,20 @@
             }
 
             string savePath = Everest.PathSettings;
-            foreach (string filename in Directory.GetFiles(savePath, "*.preset"))
+            if (Directory.Exists(savePath))
             {
-                string presetName = Path.GetFileNameWithoutExtension(filename);
-                Preset preset = new();
+                LoadPresetsFromPath(savePath);
+            }
 
-                FileStream fileStream = File.OpenRead(filename);
-                MemoryStream memoryStream = new();
-                fileStream.CopyTo(memoryStream);
-
-                BinaryReader reader = new(File.OpenRead(filename));
-                preset.Read(reader);
-                Presets[presetName] = preset;
-                Logger.Log(LogLevel.Info, "Hyperline", "Loaded preset " + presetName + " path " + filename);
+            string hyperlinePath = Path.Combine(Everest.PathSettings, "Hyperline");
+            if (Directory.Exists(hyperlinePath))
+            {
+                LoadPresetsFromPath(hyperlinePath);
+            }
+            else
+            {
+                // make the folder if it doesn't exist, it won't have any presets in it yet so we don't need to load anything
+                Directory.CreateDirectory(hyperlinePath);
             }
         }
     }

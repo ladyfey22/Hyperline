@@ -336,8 +336,8 @@ namespace Celeste.Mod.Hyperline.UI
             {
                 Audio.Play("event:/ui/main/button_back");
             }
-            Container.AutoScroll = containerAutoScroll;
             base.Exit();
+            Container.AutoScroll = containerAutoScroll;
         }
 
         public override string SearchLabel() => Label;
@@ -396,14 +396,7 @@ namespace Celeste.Mod.Hyperline.UI
 
         public override void Update()
         {
-            if (ShouldRender)
-            {
-                ease = Calc.Approach(ease, 1f, Engine.RawDeltaTime * 4f);
-            }
-            else
-            {
-                ease = Calc.Approach(ease, 0f, Engine.RawDeltaTime * 4f);
-            }
+            ease = Calc.Approach(ease, ShouldRender ? 1f : 0f, Engine.RawDeltaTime * 4f);
             base.Update();
             if (Focused && ease > 0.9f)
             {

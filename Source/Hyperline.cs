@@ -111,7 +111,7 @@
                 On.Celeste.PlayerHair.GetHairColor += GetHairColor;
             }
 
-            using (DetourHelper.GenerateDetourContext(typeof(Player), "GetTrailColor", before: ["SkinModHelperPlus", "Prideline"], after: ["JackalHelper"]))
+            using (DetourHelper.GenerateDetourContext(typeof(Player), "GetTrailColor", before: ["SkinModHelperPlus", "Prideline", "MoreDasheline"], after: ["JackalHelper"]))
             {
                 On.Celeste.Player.GetTrailColor += GetTrailColor;
             }

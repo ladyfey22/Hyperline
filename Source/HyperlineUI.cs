@@ -3,6 +3,7 @@
     using global::Celeste.Mod.UI;
     using System.Collections.Generic;
     using System.Linq;
+    using UI;
 
     public class HyperlineUI
     {
@@ -125,7 +126,10 @@
             {
                 int r = counterd;
                 List<TextMenu.Item> dashMenu = [];
+
                 colorMenus.Add(CreateDashCountMenu(menu, inGame, counterd, out TextMenuExt.EnumerableSlider<uint> hairTypeMenu));
+
+                // TextMenu.Item textureButton = new DropdownControlTray("Custom Texture: " + Hyperline.Settings.DashList[r].HairTextureSource, new KeyboardInput(Hyperline.Settings.DashList[r].HairTextureSource, null, null, 0, 12, forceControllerInput: true));
 
                 TextMenu.Item textureButton = new TextMenu.Button("Custom Texture: " + Hyperline.Settings.DashList[counterd].HairTextureSource).Pressed(() =>
                 {
@@ -133,7 +137,12 @@
                     menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Hyperline.Settings.DashList[r].HairTextureSource, v => { Hyperline.Settings.DashList[r].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(r); }, 12);
                 });
                 textureButton.Disabled = inGame;
-
+                // title, buttonName, value, onValueChange, maxValueLength, minValueLength
+                /*
+                var counterd1 = counterd;
+                TextMenu.Item textureButton =
+                    HSubMenuString.BuildOpenMenuButton<HSubMenuString>(menu, inGame, inGame ? null : () => OuiModOptions.Instance.Overworld.Goto<OuiModOptions>(), ["Custom Textures: ", "Custom Texture: " + Hyperline.Settings.DashList[counterd].HairTextureSource, Hyperline.Settings.DashList[counterd].HairTextureSource, (string v) => { Hyperline.Settings.DashList[counterd1].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(counterd1); }, 12, 1]);
+*/
                 TextMenu.Item bangsButton = new TextMenu.Button("Custom Bangs: " + Hyperline.Settings.DashList[counterd].HairBangsSource).Pressed(() =>
                 {
                     Audio.Play(SFX.ui_main_savefile_rename_start);
