@@ -103,6 +103,12 @@
                     Hyperline.Settings.LoadCustomTexture(i);
                 }
             }
+
+            public static Preset CopyFromSettings()
+            {
+                Preset preset = new() { DashList = HyperlineSettings.CloneSettings(Hyperline.Settings.DashList) };
+                return preset;
+            }
         }
 
 
@@ -134,6 +140,18 @@
             Presets[preset] = presetData; // will overwrite if it already exists
 
             return true;
+        }
+
+        public void DeletePreset(string preset)
+        {
+            string savePath = Path.Combine(Everest.PathSettings, "Hyperline");
+            string saveFile = Path.Combine(savePath, preset + ".preset");
+
+            if (File.Exists(saveFile))
+            {
+                File.Delete(saveFile);
+                Presets.Remove(preset);
+            }
         }
 
         public void LoadPresetsFromPath(string path)

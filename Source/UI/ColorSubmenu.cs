@@ -13,7 +13,11 @@ namespace Celeste.Mod.Hyperline.UI
 
         // sub items
         private readonly ColorControl colorControl;
-        private readonly TextMenu.Button textInput;
+        private readonly DropdownControlTray textInput;
+
+        //tooltip textmenu item
+        private readonly TextMenuExt.SubHeaderExt tooltip;
+
         private HSVColor color;
         private readonly TextMenu menu;
 
@@ -25,15 +29,11 @@ namespace Celeste.Mod.Hyperline.UI
             hairTexture = GFX.Game["characters/player/hair00"];
 
             colorControl = new ColorControl("Color Selector", color.H, color.S, color.V).Change((h, s, v) => OnChange(new(h, s, v)));
-            textInput = new("Code Input: " + color.ToHSVString());
-            textInput.Pressed(() =>
-            {
-                Audio.Play(SFX.ui_main_savefile_rename_start);
-                menu.SceneAs<Overworld>().Goto<Mod.UI.OuiModOptionString>().Init<Mod.UI.OuiModOptions>(color.ToHSVString(), v => OnChange(new(v)), 9);
-            });
+            // createcoloreditor expects something that gives an hsv color, and a lambda that sets the hsv color
+            textInput = HyperlineUI.CreateColorEditor(menu, "HSV/RGB Input: ", () => color, OnChange);
 
-            textInput.Disabled = inGame;
-            Add([colorControl, textInput]);
+            tooltip = new("HSV Format HHHSSSVVV or RGB Format RRGGBB");
+            Add([colorControl, textInput, tooltip]);
             Selectable = true;
         }
 
@@ -47,13 +47,6 @@ namespace Celeste.Mod.Hyperline.UI
         {
             color = c;
             colorControl.SetHSV(color.H, color.S, color.V);
-            textInput.Pressed(() =>
-            {
-                Audio.Play(SFX.ui_main_savefile_rename_start);
-                menu.SceneAs<Overworld>().Goto<Mod.UI.OuiModOptionString>().Init<Mod.UI.OuiModOptions>(color.ToHSVString(), v => OnChange(new(v)), 9);
-            });
-            textInput.Label = "Code Input: " + color.ToHSVString();
-
             onValueChange?.Invoke(color);
         }
 

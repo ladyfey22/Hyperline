@@ -5,7 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Core;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Monocle;
+using ActiveFont = global::Celeste.ActiveFont;
+using Audio = global::Celeste.Audio;
+using Dialog = global::Celeste.Dialog;
+using Input = global::Celeste.Input;
+using SFX = global::Celeste.SFX;
 
 public class KeyboardInput : HMenuItem
 {
@@ -30,6 +36,8 @@ public class KeyboardInput : HMenuItem
         }
     }
 
+    public void SetInitialValue(string v) => initialValue = v;
+
     private bool UseKeyboardInput // this re-gets it from the settings, we need the other in place to know if we need to unhook
     {
         get
@@ -38,6 +46,9 @@ public class KeyboardInput : HMenuItem
             return (settings?.UseKeyboardForTextInput ?? false) && !forceControllerInput;
         }
     }
+
+    public bool Valid { get; set; } = true;
+
     private readonly bool forceControllerInput;
 
     // length controls
@@ -45,9 +56,9 @@ public class KeyboardInput : HMenuItem
     private readonly int maxLength;
 
     // on confirm (pass the input)
-    private readonly Action<string> onConfirm;
+    private Action<string> onConfirm;
     // function to call when the user changes the input
-    private readonly Action<string> onInput;
+    private Action<string> onInput;
 
 
     // sizing
@@ -75,11 +86,11 @@ public class KeyboardInput : HMenuItem
     private readonly Color unselectColor = Color.LightGray;
     private readonly Color selectColorA = Calc.HexToColor("84FF54");
     private readonly Color selectColorB = Calc.HexToColor("FCFF59");
-    private readonly Color disableColor = Color.DarkSlateBlue;
 
     // for inputs that directly interact with buttons, we need to wait the first frame to avoid double input.
     // when Update is called for the first time, the input is not yet cleared, so we need to wait for the next frame
-    bool wasFocused;
+    private bool wasFocused;
+    private bool willExit;
 
     public KeyboardInput(string initialV, Action<string> onInput = null, Action<string> onConfirm = null, int minLength = 0, int maxLength = int.MaxValue, Vector2 sc = default, bool forceControllerInput = false)
     {
@@ -119,14 +130,22 @@ public class KeyboardInput : HMenuItem
             controlChars[i] = controlChars[i].ToLowerInvariant();
             controlChars[i] = string.Concat(controlChars[i].Substring(0, 1).ToUpperInvariant(), controlChars[i].AsSpan(1));
         }
-
         // apply the scale
         letterSize *= scale;
-        Logger.Log(LogLevel.Error, "HyperlineUI", $"Letter size: {letterSize}");
-
         // calculate the size of the keyboard. we need to know the size of the widest letter, the tallest letter, the scale, and the longest line
         keypadSize = new Vector2(letterSize.X * letters.Max(l => l.Length), letterSize.Y * letters.Count);
-        Logger.Log(LogLevel.Error, "HyperlineUI", $"Keyboard size: {keypadSize}");
+    }
+
+    public KeyboardInput Change(Action<string> newOnInput)
+    {
+        onInput = newOnInput;
+        return this;
+    }
+
+    public KeyboardInput Confirm(Action<string> newOnConfirm)
+    {
+        onConfirm = newOnConfirm;
+        return this;
     }
 
     private void AppendChar(char c)
@@ -154,7 +173,19 @@ public class KeyboardInput : HMenuItem
             return;
         }
 
-        if (!Focused || UseKeyboardInput) // if we are using the keyboard, we don't need to update the selection
+
+        if (!Focused)
+        {
+            return ;
+        }
+
+        // escape
+        if (Input.ESC.Pressed)
+        {
+            Leave(false);
+        }
+
+        if(UseKeyboardInput) // if we are using the keyboard, we don't need to update the selection
         {
             return;
         }
@@ -207,7 +238,7 @@ public class KeyboardInput : HMenuItem
             }
             else
             {
-                selectedChar = Math.Min(controlChars.Count - 1, selectedChar);
+                selectedChar = Math.Min(controlChars.Count - 1, selectedChar + 1);
             }
         }
 
@@ -254,11 +285,6 @@ public class KeyboardInput : HMenuItem
             }
         }
 
-        // escape
-        if (Input.ESC.Pressed)
-        {
-            Leave(false);
-        }
         timer += Engine.DeltaTime;
     }
 
@@ -276,6 +302,7 @@ public class KeyboardInput : HMenuItem
         containerAutoScroll = Container.AutoScroll;
         base.Enter();
         Container.AutoScroll = false;
+        inputValue = initialValue;
 
         // set the initial value
         selectedLine = 0;
@@ -286,6 +313,10 @@ public class KeyboardInput : HMenuItem
         {
             TextInput.OnInput += OnTextInput;
         }
+
+        // disable debug commands
+
+        Engine.Commands.Enabled = false;
 
         wasFocused = false;
     }
@@ -314,6 +345,9 @@ public class KeyboardInput : HMenuItem
         {
             TextInput.OnInput -= OnTextInput;
         }
+        // enable debug commands if the engine allows it
+        Engine.Commands.Enabled = Celeste.PlayMode == Celeste.PlayModes.Debug;
+
         Container.AutoScroll = containerAutoScroll;
     }
 
@@ -374,20 +408,13 @@ public class KeyboardInput : HMenuItem
     }
 
     public override float LeftWidth() => keypadSize.X;
-    public override float Height() => keypadSize.Y + (letterSize.Y * 2) + (LowerPad * 2);
 
-    private void DrawKeyboardControl(string text, Vector2 center, Vector2 justify, Vector2 textScale, bool selected,
-        bool disabled = false)
+    // we hide the on screen keyboard if we are using the keyboard for input
+    public override float Height() => (UseKeyboardInput ? letterSize.Y : keypadSize.Y) + (letterSize.Y * 2) + (LowerPad * 2);
+
+    private void DrawKeyboardControl(string text, Vector2 center, Vector2 justify, Vector2 textScale, bool selected)
     {
-        if (UseKeyboardInput)
-        {
-            selected = false;
-            disabled = true;
-        }
-
-        Color color = disabled ? disableColor : GetTextColor(selected);
-        Color edgeColor = disabled ? Color.Lerp(disableColor, Color.Black, 0.7f) : Color.Gray;
-        ActiveFont.DrawOutline(text, center, justify, textScale, color, 2f, edgeColor);
+        ActiveFont.DrawOutline(text, center, justify, textScale, GetTextColor(selected), 2f, Color.Gray);
     }
 
     private Color GetTextColor(bool selected)
@@ -406,8 +433,30 @@ public class KeyboardInput : HMenuItem
 
         // render the input value centered in the middle of the keyboard, at the top
         Vector2 currentPosition = position - new Vector2(0, Height() / 2);
-        ActiveFont.DrawOutline(Value, currentPosition + new Vector2(keypadSize.X / 2, letterSize.Y / 2), new(0.5f, 0.5f), scale, Color.White, 2, Color.Black);
+
+        Color textColor = Valid ? Color.White : Color.Red;
+        ActiveFont.DrawOutline(Value, currentPosition + new Vector2(keypadSize.X / 2, letterSize.Y / 2), new(0.5f, 0.5f), scale, textColor, 2, Color.Black);
         currentPosition.Y += letterSize.Y + LowerPad;
+
+        if(UseKeyboardInput)
+        {
+            // draw a message that the keyboard is being used. in the future use Dialog.Clean, for now, hardcode it
+            ActiveFont.DrawOutline("Using Keyboard Input.", currentPosition + new Vector2(keypadSize.X / 2, letterSize.Y / 2), new(0.5f, 0.5f), scale, Color.Gray, 2, Color.Black);
+
+            // add tooltip for Enter and ESC right below the "Using Keyboard Input" message
+            currentPosition.Y += letterSize.Y + LowerPad;
+
+            const float controlScale = 0.6f;
+            float enterWidth = ButtonUI.Width(Dialog.Clean("name_accept"), Input.Pause) * scale.X * controlScale;
+            ButtonUI.Render(currentPosition + new Vector2(keypadSize.X / 2 - enterWidth, letterSize.Y / 2), Dialog.Clean("name_accept"), Input.Pause, scale.X * controlScale, justifyX: 0.5f);
+
+            // adjust the position.x to the right of the enter button
+            float escWidth = ButtonUI.Width(Dialog.Clean("name_back"), Input.ESC) * scale.X * controlScale;
+            // draw to the right of the enter button
+            ButtonUI.Render(currentPosition + new Vector2(keypadSize.X / 2 + escWidth / 2, letterSize.Y / 2), Dialog.Clean("name_back"), Input.ESC, scale.X * controlScale, justifyX: 0.5f);
+
+            return; // we don't need to render the keyboard if we are using the keyboard
+        }
 
 
         // render the keyboard

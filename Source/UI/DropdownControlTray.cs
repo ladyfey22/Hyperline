@@ -9,8 +9,7 @@ public class DropdownControlTray : HMenuItem
     private bool containerAutoScroll;
     protected MTexture Icon { get; set; }
     public HMenuItem Control { get; set; }
-
-    private string label;
+    public string Label { get; set; }
 
     const float padding = 4f;
 
@@ -21,7 +20,7 @@ public class DropdownControlTray : HMenuItem
     public DropdownControlTray(string label, HMenuItem control)
     {
         Control = control;
-        this.label = label;
+        Label = label;
         Icon = GFX.Gui["downarrow"];
         Selectable = true;
     }
@@ -91,11 +90,11 @@ public class DropdownControlTray : HMenuItem
 
         Vector2 topLeft = new(position.X, position.Y - (Height() / 2f));
         // draw the label
-        Vector2 labelPosition = topLeft + new Vector2(ActiveFont.Measure(label).X / 2, Container.ItemSpacing + (ActiveFont.LineHeight / 2));
-        ActiveFont.DrawOutline(label, labelPosition, new(0.5f, 0.5f), Vector2.One, color, 2f, strokeColor);
+        Vector2 labelPosition = topLeft + new Vector2(ActiveFont.Measure(Label).X / 2, Container.ItemSpacing + (ActiveFont.LineHeight / 2));
+        ActiveFont.DrawOutline(Label, labelPosition, new(0.5f, 0.5f), Vector2.One, color, 2f, strokeColor);
         // draw the icon right of the label
         Color iconColor = (Disabled ? Color.DarkSlateGray : (Focused || Control.Focused) ? Container.HighlightColor : Color.White) * alpha;
-        Icon.Draw(topLeft + new Vector2(ActiveFont.Measure(label).X + (Icon.Width / 2f), ActiveFont.LineHeight / 2), new(0.5f, 0.5f), iconColor);
+        Icon.Draw(topLeft + new Vector2(ActiveFont.Measure(Label).X + (Icon.Width / 2f), ActiveFont.LineHeight / 2), new(0.5f, 0.5f), iconColor);
         // draw the control if it's open
         if (Control.ShouldRender && ease > 0.9f) // ease in
         {

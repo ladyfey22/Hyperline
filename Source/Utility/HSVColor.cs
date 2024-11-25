@@ -142,36 +142,45 @@
 
         public Color ToColor() => internalColor;
 
-        public void FromString(string colorString)
+        /// <summary>
+        /// Converts a string to a color. The string can be either an RGB or an HSV value.
+        /// Format is RRGGBB or HHHSSSVVV.
+        /// </summary>
+        /// <param name="colorString"></param>
+        /// <returns></returns>
+        public bool FromString(string colorString)
         {
 
             try
             {
-                if (colorString.Length == 6)    //Assumed to be an RGB value.
+                switch (colorString.Length)
                 {
-                    FromColor(new(
-                                int.Parse(colorString[..2], NumberStyles.HexNumber),
-                                int.Parse(colorString.Substring(2, 2), NumberStyles.HexNumber),
-                                int.Parse(colorString.Substring(4, 2), NumberStyles.HexNumber),
-                                255));
-                }
-                else
-                if (colorString.Length == 9) //Assumed to be an HSV value.
-                {
-                    H = int.Parse(colorString[..3], NumberStyles.Integer);
-                    S = int.Parse(colorString.Substring(3, 3), NumberStyles.Integer) / 100.0f;
-                    V = int.Parse(colorString.Substring(6, 3), NumberStyles.Integer) / 100.0f;
-                }
-                else
-                {
-                    FromColor(Color.White);
+                    //Assumed to be an RGB value.
+                    case 6:
+                        FromColor(new(
+                            int.Parse(colorString[..2], NumberStyles.HexNumber),
+                            int.Parse(colorString.Substring(2, 2), NumberStyles.HexNumber),
+                            int.Parse(colorString.Substring(4, 2), NumberStyles.HexNumber),
+                            255));
+                        break;
+                    //Assumed to be an HSV value.
+                    case 9:
+                        H = int.Parse(colorString[..3], NumberStyles.Integer);
+                        S = int.Parse(colorString.Substring(3, 3), NumberStyles.Integer) / 100.0f;
+                        V = int.Parse(colorString.Substring(6, 3), NumberStyles.Integer) / 100.0f;
+                        break;
+                    default:
+                        Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                        return false;
                 }
             }
             catch
             {
-                Logger.Log(LogLevel.Warn, "Hyperline", "Error reading a color value " + colorString);
+                Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                return false;
             }
             UpdateColor();
+            return true;
         }
 
         public static HSVColor operator -(HSVColor l, HSVColor r) => new(l.H - r.H, l.S - r.S, l.V - r.V);

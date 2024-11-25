@@ -34,7 +34,7 @@
         public override string GetHairName() => "MODOPTIONS_HYPERLINE_RAINBOW";
         public override Color GetColor(Color colorOrig, float phase)
         {
-            HSVColor returnV = new(359 * phase, value / MaxValue, saturation / MaxSaturation);
+            HSVColor returnV = new(359 * phase, value / (float)MaxValue, saturation / (float)MaxSaturation);
             return returnV.ToColor();
         }
 

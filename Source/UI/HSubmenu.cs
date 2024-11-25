@@ -67,6 +67,8 @@ namespace Celeste.Mod.Hyperline.UI
 
         public float MenuHeight { get; private set; }
 
+        public bool wasFocused;
+
         public HSubMenu(string label, bool enterOnSelect)
         {
             ConfirmSfx = "event:/ui/main/button_select";
@@ -388,16 +390,20 @@ namespace Celeste.Mod.Hyperline.UI
             }
         }
 
-        public override void LoseFocus()
-        {
-            base.LoseFocus();
-            Logger.Log(LogLevel.Error, "Hyperline", "HSubmenu lost focus");
-        }
-
         public override void Update()
         {
             ease = Calc.Approach(ease, ShouldRender ? 1f : 0f, Engine.RawDeltaTime * 4f);
             base.Update();
+
+            // dumb way of doing it, but
+            if(!wasFocused && Focused) // means we were passed focus
+            {
+                // clear esc and pause, because we don't want to exit after just getting focus
+                Input.ESC.ConsumePress();
+                Input.Pause.ConsumePress();
+            }
+            wasFocused = Focused;
+
             if (Focused && ease > 0.9f)
             {
                 if (Input.MenuDown.Pressed && (!Input.MenuDown.Repeating || Selection != LastPossibleSelection || enterOnSelect))

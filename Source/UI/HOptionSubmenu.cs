@@ -350,6 +350,16 @@ namespace Celeste.Mod.Hyperline.UI
             MenuHeight = Calc.Approach(MenuHeight, menuHeight, Engine.RawDeltaTime * Math.Abs(MenuHeight - menuHeight) * 8f);
             sine += Engine.RawDeltaTime;
             base.Update();
+
+            if(Focused && !wasFocused)
+            {
+                // escape is buffered for more than one frame, so we want to skip the first frame and consume the press
+                wasFocused = true;
+                Input.ESC.ConsumePress();
+                Input.Pause.ConsumePress();
+                return;
+            }
+
             if (CurrentMenu != null)
             {
                 if (Focused)

@@ -1,8 +1,10 @@
 ﻿namespace Celeste.Mod.Hyperline
 {
+    using System;
     using global::Celeste.Mod.UI;
     using System.Collections.Generic;
     using System.Linq;
+    using On.Monocle;
     using UI;
 
     public class HyperlineUI
@@ -79,21 +81,98 @@
             }
         }
 
-        public void CreatePresetMenu(TextMenu menu)
+        public HMenuItem CreatePresetMenu()
         {
-            if (Hyperline.PresetManager.Presets.Count != 0)
+            HSubMenu presetMenu = new("Presets", false);
+            presetList.Clear();
+            uint i = 0;
+            foreach (KeyValuePair<string, PresetManager.Preset> preset in Hyperline.PresetManager.Presets)
             {
-                presetList.Clear();
-                uint i = 0;
-                foreach (KeyValuePair<string, PresetManager.Preset> preset in Hyperline.PresetManager.Presets)
+                presetList.Add(new(i, preset.Key));
+                i++;
+            }
+
+            TextMenu.Button applyButton = new("Apply Preset");
+            applyButton.Disabled = presetList.Count == 0;
+            applyButton.Pressed(CopyPreset);
+
+            TextMenu.Button saveButton = new("Save Preset");
+            saveButton.Pressed(() =>
+            {
+                if(Hyperline.PresetManager.Presets.Count == 0)
                 {
-                    presetList.Add(new(i, preset.Key));
-                    i++;
+                    Logger.Log("Hyperline", "No presets to save.");
+                    return;
                 }
 
-                menu.Add(new TextMenuExt.EnumerableSlider<uint>("Preset:", presetList, 0).Change(v => currentPreset = (int)v));
-                menu.Add(new TextMenu.Button("Apply Preset").Pressed(CopyPreset));
-            }
+                Logger.Log("Hyperline", "Saving preset " + Hyperline.PresetManager.Presets.Count);
+                Hyperline.PresetManager.SavePreset(presetList[currentPreset].Value, PresetManager.Preset.CopyFromSettings());
+                Audio.Play("event:/ui/main/savefile_select");
+                OuiModOptions.Instance.Overworld.Goto<OuiModOptions>();
+            });
+            saveButton.Disabled = presetList.Count == 0;
+
+            TextMenu.Button deleteButton = new("Delete Preset");
+            deleteButton.Disabled = presetList.Count == 0;
+
+
+            TextMenuExt.EnumerableSlider<uint> p = new("Preset:", presetList, 0);
+            p.Change(v => currentPreset = (int)v);
+            presetMenu.Add(p);
+            p.Disabled = presetList.Count == 0;
+            Action updatePresetList = () =>
+            {
+                presetMenu.Remove(p);
+                presetList.Clear();
+                // for whatever reason it's internally stored as a tuple, so we have to recreate it.
+
+                uint j = 0;
+                foreach (KeyValuePair<string, PresetManager.Preset> preset in Hyperline.PresetManager.Presets)
+                {
+                    presetList.Add(new(j, preset.Key));
+                    j++;
+                }
+                p = new("Preset:", presetList, 0);
+                p.Disabled = presetList.Count == 0;
+                p.Change(v => currentPreset = (int)v);
+                // we need to insert it at the start
+                presetMenu.Insert(0, p);
+
+                applyButton.Disabled = presetList.Count == 0;
+                saveButton.Disabled = presetList.Count == 0;
+                deleteButton.Disabled = presetList.Count == 0;
+                p.Disabled = presetList.Count == 0;
+            };
+
+            deleteButton.Pressed(() =>
+            {
+                Logger.Log("Hyperline", "Deleting preset " + presetList[currentPreset].Key);
+                Hyperline.PresetManager.DeletePreset(presetList[currentPreset].Value);
+                Audio.Play("event:/ui/main/savefile_delete");
+                OuiModOptions.Instance.Overworld.Goto<OuiModOptions>();
+                updatePresetList.Invoke();
+            });
+
+
+            presetMenu.Add(applyButton);
+            presetMenu.Add(saveButton);
+            presetMenu.Add(deleteButton);
+
+            // create a new preset from the current settings. This should be a keyboard dropdown tray, and on confirm, it should save the preset.
+            KeyboardInput presetInput = new("", null, null, 0, 12);
+            DropdownControlTray presetButton = new("New Preset: ", presetInput);
+
+            presetInput.Confirm(v =>
+            {
+                Logger.Log("Hyperline", "Saving preset " + v);
+                Hyperline.PresetManager.SavePreset(v, PresetManager.Preset.CopyFromSettings());
+                Audio.Play("event:/ui/main/savefile_select");
+                OuiModOptions.Instance.Overworld.Goto<OuiModOptions>();
+                updatePresetList.Invoke();
+            });
+            presetMenu.Add(presetButton);
+
+            return presetMenu;
         }
 
         public static void SetHairLength(int dashCount, int hairLength) => Hyperline.Settings.DashList[dashCount].HairLength = hairLength;
@@ -101,6 +180,79 @@
         public static void SetHairSpeed(int dashCount, int hairSpeed) => Hyperline.Settings.DashList[dashCount].HairSpeed = hairSpeed;
 
         public static void SetHairPhase(int dashCount, int hairPhase) => Hyperline.Settings.DashList[dashCount].HairPhase = hairPhase;
+
+
+        // create a texture editor using the keyboard, parameters are a get and set for the value
+        public static DropdownControlTray CreateTextureEditor(TextMenu menu, string buttonName,
+            Func<string> getValue, Action<string> setValue)
+        {
+            KeyboardInput textureInput = new(getValue(), null, null, 0, 12);
+            DropdownControlTray textureButton = new(buttonName + getValue(), textureInput);
+            textureInput.Confirm(v =>
+            {
+                // log
+                Logger.Log(LogLevel.Info, "Hyperline", "Setting custom texture to " + v);
+                if (string.IsNullOrEmpty(v) || !HyperlineSettings.HasAtlasSubtexture("hyperline/" + v))
+                {
+                    // clear the texture if it's invalid
+                    setValue("");
+                    textureInput.Value = getValue();
+                    textureButton.Label = buttonName + getValue();
+                    Logger.Log(LogLevel.Warn, "Hyperline", "Invalid custom texture, clearing.");
+                    return;
+                }
+
+                setValue(v);
+                textureInput.Value = getValue();
+                textureButton.Label = buttonName + getValue();
+                Logger.Log(LogLevel.Info, "Hyperline", "Custom texture set to " + v);
+            });
+
+            textureInput.Change(v =>
+            {
+                // validate and set Valid on the input
+                textureInput.Valid = string.IsNullOrEmpty(v) || HyperlineSettings.HasAtlasSubtexture("hyperline/" + v);
+            });
+
+            return textureButton;
+        }
+
+        // equivalent to the above, but for color text input.
+        // HSVColor ToString and FromString are used to convert the color to and from a string. bool FromString(string) is used to validate the input.
+        public static DropdownControlTray CreateColorEditor(TextMenu menu, string buttonName,
+            Func<HSVColor> getValue, Action<HSVColor> setValue)
+        {
+            KeyboardInput colorInput = new(getValue().ToHSVString(), null, null, 0, 9);
+            DropdownControlTray colorButton = new(buttonName + getValue().ToHSVString(), colorInput);
+            colorInput.Confirm(v =>
+            {
+                // log
+                Logger.Log(LogLevel.Info, "Hyperline", "Setting custom color to " + v);
+                HSVColor color = new();
+                if (!color.FromString(v))
+                {
+                    // revert to the previous color if the input is invalid
+                    setValue(getValue());
+                    colorInput.Value = getValue().ToHSVString();
+                    colorButton.Label = buttonName + getValue().ToHSVString();
+                    Logger.Log(LogLevel.Warn, "Hyperline", "Invalid custom color, reverting.");
+                    return;
+                }
+
+                setValue(color);
+                colorInput.Value = getValue().ToHSVString();
+                colorButton.Label = buttonName + getValue().ToHSVString();
+                Logger.Log(LogLevel.Info, "Hyperline", "Custom color set to " + v);
+            });
+
+            colorInput.Change(v =>
+            {
+                // validate and set Valid on the input
+                colorInput.Valid = new HSVColor().FromString(v);
+            });
+
+            return colorButton;
+        }
 
         public void CreateMenu(TextMenu menu, bool inGame)
         {
@@ -115,7 +267,7 @@
             menu.Add(maddyCrownText);
             menu.Add(doFeatherColorText);
             menu.Add(doDashFlashText);
-            CreatePresetMenu(menu);
+            menu.Add(CreatePresetMenu());
 
             colorMenus = [];    //dashes
             dashCountMenu = new("Dashes");
@@ -129,26 +281,9 @@
 
                 colorMenus.Add(CreateDashCountMenu(menu, inGame, counterd, out TextMenuExt.EnumerableSlider<uint> hairTypeMenu));
 
-                // TextMenu.Item textureButton = new DropdownControlTray("Custom Texture: " + Hyperline.Settings.DashList[r].HairTextureSource, new KeyboardInput(Hyperline.Settings.DashList[r].HairTextureSource, null, null, 0, 12, forceControllerInput: true));
+                DropdownControlTray textureButton = CreateTextureEditor(menu, "Custom Texture: ", () => Hyperline.Settings.DashList[r].HairTextureSource, v => { Hyperline.Settings.DashList[r].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(r); });
 
-                TextMenu.Item textureButton = new TextMenu.Button("Custom Texture: " + Hyperline.Settings.DashList[counterd].HairTextureSource).Pressed(() =>
-                {
-                    Audio.Play(SFX.ui_main_savefile_rename_start);
-                    menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Hyperline.Settings.DashList[r].HairTextureSource, v => { Hyperline.Settings.DashList[r].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(r); }, 12);
-                });
-                textureButton.Disabled = inGame;
-                // title, buttonName, value, onValueChange, maxValueLength, minValueLength
-                /*
-                var counterd1 = counterd;
-                TextMenu.Item textureButton =
-                    HSubMenuString.BuildOpenMenuButton<HSubMenuString>(menu, inGame, inGame ? null : () => OuiModOptions.Instance.Overworld.Goto<OuiModOptions>(), ["Custom Textures: ", "Custom Texture: " + Hyperline.Settings.DashList[counterd].HairTextureSource, Hyperline.Settings.DashList[counterd].HairTextureSource, (string v) => { Hyperline.Settings.DashList[counterd1].HairTextureSource = v; Hyperline.Settings.LoadCustomTexture(counterd1); }, 12, 1]);
-*/
-                TextMenu.Item bangsButton = new TextMenu.Button("Custom Bangs: " + Hyperline.Settings.DashList[counterd].HairBangsSource).Pressed(() =>
-                {
-                    Audio.Play(SFX.ui_main_savefile_rename_start);
-                    menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Hyperline.Settings.DashList[r].HairBangsSource, v => { Hyperline.Settings.DashList[r].HairBangsSource = v; Hyperline.Settings.LoadCustomBangs(r); }, 12);
-                });
-                bangsButton.Disabled = inGame;
+                DropdownControlTray bangsButton = CreateTextureEditor(menu, "Custom Bangs: ", () => Hyperline.Settings.DashList[r].HairBangsSource, v => { Hyperline.Settings.DashList[r].HairBangsSource = v; Hyperline.Settings.LoadCustomBangs(r); });
 
                 dashMenu.Add(textureButton);
                 dashMenu.Add(bangsButton);
