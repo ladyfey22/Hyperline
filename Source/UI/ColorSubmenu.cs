@@ -13,7 +13,8 @@ namespace Celeste.Mod.Hyperline.UI
 
         // sub items
         private readonly ColorControl colorControl;
-        private readonly DropdownControlTray textInput;
+        private DropdownControlTray textButton;
+        private KeyboardInput textInput;
 
         //tooltip textmenu item
         private readonly TextMenuExt.SubHeaderExt tooltip;
@@ -21,19 +22,20 @@ namespace Celeste.Mod.Hyperline.UI
         private HSVColor color;
         private readonly TextMenu menu;
 
-        public ColorSubmenu(TextMenu menu, string label, HSVColor color, bool inGame) : base(label, false)
+
+        public ColorSubmenu(TextMenu menu, string label, HSVColor c, bool inGame) : base(label, false)
         {
-            this.color = color;
+            color = c;
             this.menu = menu;
 
             hairTexture = GFX.Game["characters/player/hair00"];
 
             colorControl = new ColorControl("Color Selector", color.H, color.S, color.V).Change((h, s, v) => OnChange(new(h, s, v)));
             // createcoloreditor expects something that gives an hsv color, and a lambda that sets the hsv color
-            textInput = HyperlineUI.CreateColorEditor(menu, "HSV/RGB Input: ", () => color, OnChange);
-
+            CreateColorEditor("HSV/RGB Input: ");
+            textInput = textButton.Control as KeyboardInput;
             tooltip = new("HSV Format HHHSSSVVV or RGB Format RRGGBB");
-            Add([colorControl, textInput, tooltip]);
+            Add([colorControl, textButton, tooltip]);
             Selectable = true;
         }
 
@@ -47,6 +49,8 @@ namespace Celeste.Mod.Hyperline.UI
         {
             color = c;
             colorControl.SetHSV(color.H, color.S, color.V);
+            textInput.SetInitialValue(color.ToHSVString());
+            textButton.Label =  "HSV/RGB Input: " + color.ToHSVString();
             onValueChange?.Invoke(color);
         }
 
@@ -60,6 +64,36 @@ namespace Celeste.Mod.Hyperline.UI
             float textWidth = ActiveFont.Measure(Label).X + (Icon.Width * 2);
             // draw the hair sample at the location just after the text
             hairTexture.DrawCentered(vector2 + (textWidth * Vector2.UnitX), color.ToColor(), 4);
+        }
+
+        private void CreateColorEditor(string buttonName)
+        {
+            textInput = new(color.ToHSVString(), null, null, 0, 9);
+            textButton = new(buttonName + color.ToHSVString(), textInput);
+            textInput.Confirm(v =>
+            {
+                HSVColor c = new();
+                if (!c.FromString(v))
+                {
+                    // revert to the previous color if the input is invalid
+                    textInput.Value = color.ToHSVString();
+                    textButton.Label = buttonName + color.ToHSVString();
+                    Logger.Log(LogLevel.Warn, "Hyperline", "Invalid custom color, reverting.");
+                    return;
+                }
+
+                color = c;
+                colorControl.SetHSV(color.H, color.S, color.V);
+                onValueChange?.Invoke(color);
+                textInput.Value = color.ToHSVString();
+                textButton.Label = buttonName + color.ToHSVString();
+            });
+
+            textInput.Change(v =>
+            {
+                // validate and set Valid on the input
+                textInput.Valid = new HSVColor().FromString(v, true);
+            });
         }
     }
 }

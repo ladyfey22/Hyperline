@@ -217,43 +217,6 @@
             return textureButton;
         }
 
-        // equivalent to the above, but for color text input.
-        // HSVColor ToString and FromString are used to convert the color to and from a string. bool FromString(string) is used to validate the input.
-        public static DropdownControlTray CreateColorEditor(TextMenu menu, string buttonName,
-            Func<HSVColor> getValue, Action<HSVColor> setValue)
-        {
-            KeyboardInput colorInput = new(getValue().ToHSVString(), null, null, 0, 9);
-            DropdownControlTray colorButton = new(buttonName + getValue().ToHSVString(), colorInput);
-            colorInput.Confirm(v =>
-            {
-                // log
-                Logger.Log(LogLevel.Info, "Hyperline", "Setting custom color to " + v);
-                HSVColor color = new();
-                if (!color.FromString(v))
-                {
-                    // revert to the previous color if the input is invalid
-                    setValue(getValue());
-                    colorInput.Value = getValue().ToHSVString();
-                    colorButton.Label = buttonName + getValue().ToHSVString();
-                    Logger.Log(LogLevel.Warn, "Hyperline", "Invalid custom color, reverting.");
-                    return;
-                }
-
-                setValue(color);
-                colorInput.Value = getValue().ToHSVString();
-                colorButton.Label = buttonName + getValue().ToHSVString();
-                Logger.Log(LogLevel.Info, "Hyperline", "Custom color set to " + v);
-            });
-
-            colorInput.Change(v =>
-            {
-                // validate and set Valid on the input
-                colorInput.Valid = new HSVColor().FromString(v);
-            });
-
-            return colorButton;
-        }
-
         public void CreateMenu(TextMenu menu, bool inGame)
         {
             currentPreset = 0;

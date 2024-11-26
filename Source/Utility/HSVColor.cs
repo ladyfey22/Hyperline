@@ -148,7 +148,7 @@
         /// </summary>
         /// <param name="colorString"></param>
         /// <returns></returns>
-        public bool FromString(string colorString)
+        public bool FromString(string colorString, bool supress = false)
         {
 
             try
@@ -170,13 +170,20 @@
                         V = int.Parse(colorString.Substring(6, 3), NumberStyles.Integer) / 100.0f;
                         break;
                     default:
-                        Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                        if (!supress)
+                        {
+                            Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                        }
+
                         return false;
                 }
             }
             catch
             {
-                Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                if (!supress)
+                {
+                    Logger.Log(LogLevel.Warn, "Hyperline", "Invalid color string " + colorString);
+                }
                 return false;
             }
             UpdateColor();
