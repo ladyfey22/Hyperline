@@ -3,6 +3,7 @@ namespace Celeste.Mod.Hyperline.UI
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.Xna.Framework;
     using Monocle;
 
@@ -439,7 +440,7 @@ namespace Celeste.Mod.Hyperline.UI
                     Exit();
                 }
             }
-            foreach (TextMenu.Item item in Items)
+            foreach (TextMenu.Item item in Items.ToList())
             {
                 item.OnUpdate?.Invoke();
                 item.Update();
