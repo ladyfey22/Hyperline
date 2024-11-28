@@ -1,4 +1,4 @@
-namespace Celeste.Mod.Hyperline.UI
+namespace Celeste.Mod.Hyperline.Lib.UI
 {
     using System;
     using System.Collections.Generic;

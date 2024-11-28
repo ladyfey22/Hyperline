@@ -1,4 +1,4 @@
-namespace Celeste.Mod.Hyperline.UI;
+namespace Celeste.Mod.Hyperline.Lib.UI;
 
 using System;
 using System.Collections.Generic;
@@ -90,7 +90,6 @@ public class KeyboardInput : HMenuItem
     // for inputs that directly interact with buttons, we need to wait the first frame to avoid double input.
     // when Update is called for the first time, the input is not yet cleared, so we need to wait for the next frame
     private bool wasFocused;
-    private bool willExit;
 
     public KeyboardInput(string initialV, Action<string> onInput = null, Action<string> onConfirm = null, int minLength = 0, int maxLength = int.MaxValue, Vector2 sc = default, bool forceControllerInput = false)
     {

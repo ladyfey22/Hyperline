@@ -2,6 +2,7 @@ namespace Celeste.Mod.Hyperline
 {
     using System.Collections.Generic;
     using Monocle;
+    using Lib;
 
     /// <summary>
     /// Represents a source of hyperline hair info.

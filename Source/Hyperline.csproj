@@ -29,6 +29,11 @@
         <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll" Private="false" />
         <Reference Include="$(CelestePrefix)\FNA.dll" Private="false" />
     </ItemGroup>
+  
+    <!-- We need to copy local for Hyperline.Lib only, but also need to make sure it's built first -->
+    <ItemGroup>
+        <ProjectReference Include="..\Hyperline.Lib\Hyperline.Lib.csproj"/>
+    </ItemGroup>
 
     <Target Name="CopyFiles" AfterTargets="Build" Inputs="$(OutputPath)\$(AssemblyName).dll;$(OutputPath)\$(AssemblyName).pdb" Outputs="..\bin\$(AssemblyName).dll;..\bin\$(AssemblyName).pdb">
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="..\bin" />

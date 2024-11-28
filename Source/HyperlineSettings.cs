@@ -6,6 +6,9 @@
     using System.IO;
     using System.Reflection;
     using System.Xml.Linq;
+    using HairTypes;
+    using Lib.Utility;
+    using Lib;
 
     [SettingName("modoptions_hyperline_title")]
     public class HyperlineSettings : EverestModuleBinarySettings

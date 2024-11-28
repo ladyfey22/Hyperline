@@ -4,6 +4,7 @@ namespace Celeste.Mod.Hyperline.UI
     using System;
     using Monocle;
     using Microsoft.Xna.Framework;
+    using Lib;
 
     public class HairPreview : TextMenu.Item
     {

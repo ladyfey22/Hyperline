@@ -1,11 +1,14 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.HairTypes
 {
     using Microsoft.Xna.Framework;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.Linq;
+    using Lib.Utility;
+    using Lib;
+    using Lib.UI;
 
-    public class SolidHair : IHairType
+    public class SolidHair : BaseHairType
     {
         private HSVColor color;
 
@@ -34,7 +37,7 @@
         {
             List<TextMenu.Item> colorMenus =
             [
-                new UI.ColorSubmenu(menu, "Color ", color, inGame).Change(v => color = new(v))
+                new ColorSubmenu(menu, "Color ", color, inGame).Change(v => color = new(v))
             ];
             return colorMenus;
         }

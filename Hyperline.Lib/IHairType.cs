@@ -1,4 +1,4 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.Lib
 {
     using Microsoft.Xna.Framework;
     using Monocle;
@@ -6,16 +6,18 @@
     using System.IO;
     using System.Reflection;
     using System.Xml.Linq;
+    using Lib.Utility;
 
     /// <summary>
     /// Interface for all hair types.
     /// </summary>
     /// <remarks>
-    /// Check GradiantHair, SolidHair, and PatternHair for example implementations.
+    /// Check GradiantHair, SolidHair, and PatternHair for example implementations
     /// </remarks>
     public abstract class IHairType
     {
-        private static readonly FieldInfo HairflashtimerField = typeof(Player).GetField("hairFlashTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo HairFlashTimerField =
+            typeof(Player).GetField("hairFlashTimer", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public static void ReadColorElement(XElement element, string name, ref HSVColor color)
         {
@@ -29,23 +31,17 @@
         public static float GetHairFlashTimer(Player player)
         {
             float flashTimer = 0.0f;
-            if (HairflashtimerField != null)
+            if (HairFlashTimerField != null)
             {
-                object obj = HairflashtimerField.GetValue(player);
+                object obj = HairFlashTimerField.GetValue(player);
                 if (obj != null)
                 {
                     flashTimer = (float)obj;
                 }
             }
+
             return flashTimer;
         }
-
-        private static int lastDashes;
-        private static float hairFlashTimer;
-
-        public static bool IsFlash() => hairFlashTimer > 0;
-
-        public static Color LerpFlash(Color c) => Color.Lerp(c, Player.FlashHairColor, (float)System.Math.Sin(hairFlashTimer / 0.12f * MathHelper.Pi));
 
         /// <summary>
         /// Function to get the display name of a hair type.
@@ -80,7 +76,7 @@
         /// <summary>
         /// Calculates the current color returned by the hair type.
         /// </summary>
-        /// <param name="phase"> 
+        /// <param name="phase">
         /// A parameter between 0-1.
         /// representing the position along the length of the hair (accounting for speed).
         /// </param>
@@ -165,40 +161,21 @@
         /// <remarks>
         /// It is reccomended to look at the default hair after update before writing this.
         /// </remarks>
-        public virtual void AfterUpdate(On.Celeste.PlayerHair.orig_AfterUpdate orig, PlayerHair self)
-        {
-            Player player = self.EntityAs<Player>();
-            if (!(!Hyperline.Settings.DoFeatherColor && player.StateMachine.State == 19))
-            {
-                player.Hair.Color = Hyperline.GetCurrentColor(Hyperline.Instance.LastColor, player.Dashes, 0);
-            }
+        public abstract void AfterUpdate(On.Celeste.PlayerHair.orig_AfterUpdate orig, PlayerHair self);
 
-            orig(self);
-        }
+        /// <summary>
+        /// Function called on player hair update.
+        /// </summary>
+        /// <param name="lastColor">The last color of the hair.</param>
+        /// <param name="player">The player.</param>
+        public abstract void PlayerUpdate(Color lastColor, Player player);
 
-        public virtual void PlayerUpdate(Color lastColor, Player player)
-        {
-            if (player != null)
-            {
-                player.OverrideHairColor = Hyperline.GetCurrentColor(Hyperline.Instance.LastColor, player.Dashes, 0);
-                Hyperline.Instance.MaddyCrownSprite = null;
-            }
-        }
-
-        public virtual void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
-        {
-            if (lastDashes != self.Dashes)
-            {
-                hairFlashTimer = 0.12f;
-            }
-
-            if (hairFlashTimer > 0f)
-            {
-                hairFlashTimer -= Engine.DeltaTime;
-            }
-
-            lastDashes = self.Dashes;
-            orig(self, applyGravity);
-        }
+        /// <summary>
+        /// Updates the hair, allowing for custom physics.
+        /// </summary>
+        /// <param name="orig">The default function for hair updating.</param>
+        /// <param name="self">The player's hair.</param>
+        /// <param name="applyGravity">Whether gravity should be applied.</param>
+        public abstract void UpdateHair(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity);
     }
 }

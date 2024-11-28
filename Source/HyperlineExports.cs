@@ -1,5 +1,6 @@
 namespace Celeste.Mod.Hyperline;
 using MonoMod.ModInterop;
+using Lib;
 
 /// <summary>
 /// Provides export functions for other mods to import.

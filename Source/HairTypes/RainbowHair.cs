@@ -1,12 +1,14 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.HairTypes
 {
     using Microsoft.Xna.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.Linq;
+    using Lib.Utility;
+    using Lib;
 
-    public class RainbowHair : IHairType
+    public class RainbowHair : BaseHairType
     {
         private int saturation;
         private int value;

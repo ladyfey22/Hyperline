@@ -1,9 +1,10 @@
 
-namespace Celeste.Mod.Hyperline.UI
+namespace Celeste.Mod.Hyperline.Lib.UI
 {
     using System;
     using Microsoft.Xna.Framework;
     using Monocle;
+    using Utility;
 
     public class ColorSubmenu : HSubMenu
     {

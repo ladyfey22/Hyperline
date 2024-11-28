@@ -1,12 +1,15 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.HairTypes
 {
-    using Microsoft.Xna.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.Linq;
+    using Lib.Utility;
+    using Lib;
+    using Microsoft.Xna.Framework;
+    using Lib.UI;
 
-    public class GradientHair : IHairType
+    public class GradientHair : BaseHairType
     {
         private HSVColor color1; // the start color of the gradient
         private HSVColor color2; // the end color of the gradient
@@ -69,8 +72,8 @@
         {
             List<TextMenu.Item> colorMenus = [];
 
-            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 1 ", color1, inGame).Change(v => color1 = new(v)));
-            colorMenus.Add(new UI.ColorSubmenu(menu, "Color 2 ", color2, inGame).Change(v => color2 = new(v)));
+            colorMenus.Add(new ColorSubmenu(menu, "Color 1 ", color1, inGame).Change(v => color1 = new(v)));
+            colorMenus.Add(new ColorSubmenu(menu, "Color 2 ", color2, inGame).Change(v => color2 = new(v)));
             colorMenus.Add(new TextMenu.OnOff("Rgb Gradient", doRgbGradient).Change(v => doRgbGradient = v));
             colorMenus.Add(new TextMenu.Slider("Cycles", v => v.ToString(), MinCycles, MaxCycles, cycles).Change(v => cycles = v));
             colorMenus.Add(new TextMenu.OnOff("Do Return Gradient", colorReturn).Change(v => colorReturn = v));

@@ -1,7 +1,9 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿
+namespace Celeste.Mod.Hyperline
 {
     using System.Collections.Generic;
-
+    using Lib.Utility;
+    using Lib;
     public class HairTypeManager
     {
         public HairTypeManager()

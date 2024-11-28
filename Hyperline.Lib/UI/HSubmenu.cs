@@ -1,4 +1,4 @@
-namespace Celeste.Mod.Hyperline.UI
+namespace Celeste.Mod.Hyperline.Lib.UI
 {
 
     using System;
@@ -68,7 +68,7 @@ namespace Celeste.Mod.Hyperline.UI
 
         public float MenuHeight { get; private set; }
 
-        public bool wasFocused;
+        private bool wasFocused;
 
         public HSubMenu(string label, bool enterOnSelect)
         {

@@ -1,5 +1,5 @@
 
-namespace Celeste.Mod.Hyperline.UI
+namespace Celeste.Mod.Hyperline.Lib.UI
 {
     public abstract class HMenuItem : TextMenu.Item
     {

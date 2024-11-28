@@ -1,12 +1,15 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.HairTypes
 {
     using Microsoft.Xna.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.Linq;
+    using Lib.Utility;
+    using Lib;
+    using Lib.UI;
 
-    public class PatternHair : IHairType
+    public class PatternHair : BaseHairType
     {
         public const int MaxPatternCount = 10;
         private readonly HSVColor[] colorList;
@@ -64,7 +67,7 @@
             for (int i = 0; i < MaxPatternCount; i++)
             {
                 int counter = i;
-                colorMenus.Add(new UI.ColorSubmenu(menu, "Color " + (i + 1), colorList[counter], inGame).Change(v => colorList[counter] = new(v)));
+                colorMenus.Add(new ColorSubmenu(menu, "Color " + (i + 1), colorList[counter], inGame).Change(v => colorList[counter] = new(v)));
 
             }
             return colorMenus;

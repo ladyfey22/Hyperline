@@ -7,7 +7,9 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using HairTypes;
     using MonoMod.RuntimeDetour;
+    using Lib;
 
     public class Hyperline : EverestModule
     {
@@ -359,7 +361,7 @@
                 Instance.lastHairLength = Instance.HairSource.GetHairLength(player.Dashes);
             }
 
-            if (IHairType.IsFlash() && Settings.DoDashFlash)
+            if (BaseHairType.IsFlash() && Settings.DoDashFlash)
             {
                 return Player.FlashHairColor; // if the player's hair is currently flashing, do the flash
             }

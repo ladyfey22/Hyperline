@@ -1,4 +1,4 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.Lib.Utility
 {
     public class Hashing
     {

@@ -1,4 +1,4 @@
-namespace Celeste.Mod.Hyperline.UI;
+namespace Celeste.Mod.Hyperline.Lib.UI;
 
 using Microsoft.Xna.Framework;
 using Monocle;

@@ -4,8 +4,8 @@
     using global::Celeste.Mod.UI;
     using System.Collections.Generic;
     using System.Linq;
-    using On.Monocle;
-    using UI;
+    using Lib.UI;
+    using Lib;
 
     public class HyperlineUI
     {
@@ -18,7 +18,7 @@
         private TextMenu.Option<bool> doDashFlashText;
 
         private List<List<List<TextMenu.Item>>> colorMenus; //format is  [Dashes][Type][ColorNum]
-        private UI.HOptionSubmenu dashCountMenu;
+        private HOptionSubmenu dashCountMenu;
 
         private readonly List<KeyValuePair<uint, string>> presetList;
 

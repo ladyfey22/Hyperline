@@ -1,11 +1,13 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.HairTypes
 {
-    using Microsoft.Xna.Framework;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.Linq;
+    using Lib.Utility;
+    using Microsoft.Xna.Framework;
+    using Lib;
 
-    public class DefaultHair : IHairType
+    public class DefaultHair : BaseHairType
     {
         public DefaultHair()
         {

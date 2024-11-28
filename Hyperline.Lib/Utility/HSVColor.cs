@@ -1,4 +1,4 @@
-﻿namespace Celeste.Mod.Hyperline
+﻿namespace Celeste.Mod.Hyperline.Lib.Utility
 {
     using Microsoft.Xna.Framework;
     using System;
