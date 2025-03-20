@@ -39,7 +39,7 @@
 
             public int Dash { get; set; }
             public List<MTexture> HairBangs { get; set; }
-            public Dictionary<uint, IHairType> HairList { get; set; } = Hyperline.HairTypes.CopyHairDict();
+            public Dictionary<uint, IHairType> HairList { get; set; } = new();
 
             public object Clone() => MemberwiseClone();
 
@@ -48,6 +48,11 @@
                 Dash = dashCount;
 
                 HairLength = dashCount < 2 ? 4 : 5;
+
+                foreach (IHairType hair in Hyperline.HairTypes.GetHairTypes())
+                {
+                    HairList[hair.GetHash()] = hair.CreateNew(dashCount);
+                }
             }
 
             public void Read(XElement dashCountElement)
