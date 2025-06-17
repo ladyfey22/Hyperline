@@ -291,7 +291,12 @@
                 {
                     Instance.MaddyCrownSprite = null;
                     IHairType currentHair = Instance.HairSource.GetHair(player.Dashes);
-                    currentHair?.PlayerUpdate(Instance.LastColor, player);
+                    if (currentHair != null)
+                    {
+                        Imports.SkinModHelperPlus.SetHairConfigColor_Active?.Invoke(player.Hair, false);
+                        Imports.SkinModHelperPlus.SetHairConfigLengths_Active?.Invoke(player.Hair, false);
+                        currentHair.PlayerUpdate(Instance.LastColor, player);
+                    }
                 }
                 else
                 {
