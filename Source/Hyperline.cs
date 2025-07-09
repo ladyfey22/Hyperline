@@ -138,6 +138,7 @@
             On.Celeste.Player.Update += PlayerUpdate;
 
             TriggerManager.Hook();
+            typeof(Imports.SkinModHelperPlus).ModInterop();
         }
 
         public override void Unload()
