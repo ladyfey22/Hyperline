@@ -8,7 +8,7 @@
         <CelestePrefix Condition="'$(CelestePrefix)' == '' And Exists('..\..\..\Celeste.dll')">..\..\..</CelestePrefix>
         <CelestePrefix Condition="'$(CelestePrefix)' == ''">lib-stripped</CelestePrefix>
         <ZippedFiles>..\everest.yaml;..\Effects\**\*.*;..\bin\**\*.*;..\Audio\**\*.*;..\Dialog\**\*.*;..\Graphics\**\*.*;..\Ahorn\**\*.*;..\Loenn\**\*.*</ZippedFiles>
-        <AssemblyVersion>0.3.8</AssemblyVersion>
+        <AssemblyVersion>0.3.9</AssemblyVersion>
     </PropertyGroup>
 
     <!--Disable "Copy Local" for all references-->
