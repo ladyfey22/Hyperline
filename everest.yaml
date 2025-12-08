@@ -1,5 +1,5 @@
 - Name: Hyperline
-  Version: 0.3.9
+  Version: 0.3.10
   DLL: bin/Hyperline.dll
   Dependencies:
     - Name: EverestCore
