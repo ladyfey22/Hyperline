@@ -311,10 +311,7 @@
                 player.OverrideHairColor = null;
             }
             orig(player);
-            if (Settings.Enabled)
-            {
-                Instance.UpdateHairLength(player.Hair);
-            }
+            Instance.UpdateHairLength(player.Hair);
         }
 
         // needed to play the death effect for the player in the correct color
