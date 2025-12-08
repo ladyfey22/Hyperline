@@ -19,4 +19,10 @@ public static class HyperlineExports
     /// </summary>
     /// <param name="preset">The preset to override with. If null, clear the current preset.</param>
     public static void SetTriggerPreset(string preset) => Hyperline.TriggerManager.Trigger(preset);
+
+
+    /// <summary>
+    /// Get if Hyperline is active. working.
+    /// </summary>
+    public static bool Active() => Hyperline.Settings.Enabled;
 }
