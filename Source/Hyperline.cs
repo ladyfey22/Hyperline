@@ -311,6 +311,10 @@
                 player.OverrideHairColor = null;
             }
             orig(player);
+            if (Settings.Enabled)
+            {
+                Instance.UpdateHairLength(player.Hair);
+            }
         }
 
         // needed to play the death effect for the player in the correct color
@@ -409,7 +413,9 @@
 
             Instance.time += Engine.DeltaTime;
             Instance.MaddyCrownSprite = null;
-            Instance.UpdateHairLength(self);
+
+            // moved to Player.Update. This is because sometimes PlayerHair.UpdateAfter might be ignored after Player.Update
+            //Instance.UpdateHairLength(self);
 
             IHairType hair = Instance.HairSource.GetHair(player.Dashes);
             if (hair != null)
